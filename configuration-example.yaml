@@ -1,0 +1,26 @@
+# The path to the file is set by the CFG_PTH environment variable. Default /conf/example.yaml
+logging:
+  level: debug        # LOG_LVL - enum(Optional), debug or info or warning or error or critical. Default "info"
+  format: string      # LOG_FMT - enum(Optional), json or string. Default "string"
+  output: stream      # LOG_OUT - enum(Optional), stream or file. Default "stream"
+  path: /log/app.log  # LOG_PTH - string(Optional), if output = file. Default "/log/app.log"
+
+database:
+  name: test_db               # DB_NAME - string, database name
+  rw:
+    host: 127.0.0.1           # DB_RW_HOST - string, IP address or DNS database host name to record data
+    port: 5432                # DB_RW_PORT - int, port on which the database to record data
+    user: test_user           # DB_RW_USER - string, user to connect to the database to record data
+    password: testPassword    # DB_RW_PAS - string, password for connecting to the database to record data
+  ro:                         # (Optional) if one of the parameters is not defined or is not defined, then the parameters from the rw connection are used
+    host: 127.0.0.1           # DB_RO_HOST - string, IP address or DNS database host name for reading data
+    port: 5433                # DB_RO_PORT - int, port on which the database for reading data
+    user: test_user_ro        # DB_RO_USER - string, user to connect to the database for reading data
+    password: testPasswordRo  # DB_RO_PAS - string, password for connecting to the database for reading data
+
+app:
+  tgBot:
+    token: 6870999386:AAGccloydrBobPuFvzjrMWYKkLpMRSzxy3K   # TG_TOKEN - string, token for telegram bot
+    admins:                                                 # TG_ADMINS - string "hurdur1, hurdur2, hurdur3"
+      - hurdur1
+      - hurdur2

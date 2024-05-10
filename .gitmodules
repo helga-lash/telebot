@@ -1,0 +1,3 @@
+[submodule "helpers_entity"]
+	path = helpers_entity
+	url = git@github.com:helga-lash/helpers_entity.git

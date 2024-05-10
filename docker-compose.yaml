@@ -1,0 +1,50 @@
+services:
+
+  database:
+    image: postgres:16.2-alpine3.19
+    container_name: postgres
+    shm_size: 1024mb
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    environment:
+      TZ: Europe/Moscow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST_AUTH_METHOD: md5
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./database/data:/var/lib/postgresql/data
+      - ./database/postgres.conf:/etc/postgresql/postgresql.conf
+      - ./database/initdb:/docker-entrypoint-initdb.d
+    command:
+      - '-c'
+      - 'config_file=/etc/postgresql/postgresql.conf'
+
+  migrations:
+    image: migrate/migrate:v4.17.1
+    container_name: migrations
+    environment:
+      TZ: Europe/Moscow
+    volumes:
+      - ./database/lash/migrations:/migrations
+    command:
+      - '-path=/migrations/'
+      - '-database'
+      - 'postgres://rw_user:rwPassword@postgres:5432/lash?sslmode=disable&x-migrations-table=migrations&search_path=lash'
+      - 'up'
+    depends_on:
+      database:
+        condition: service_healthy
