@@ -3,17 +3,49 @@ from uuid import uuid4
 
 
 class UsersDefault(Model):
+    """
+    A class describing unrelated fields for the users table
+
+    Attributes:
+        tg_id: peewee.CharField(50)
+            user ID in telegram
+        name: peewee.CharField(10)
+            username
+        surname: peewee.CharField(10)
+            user surname
+        phone_number: peewee.CharField(20)
+            user phone number
+        notes: peewee.TextField
+            notes about the user
+    """
     tg_id = CharField(column_name='tg_id', max_length=50, unique=True, null=False, primary_key=True)
-    name = CharField(column_name='name', max_length=50, null=False)
-    surname = CharField(column_name='surname', max_length=50, null=False)
+    name = CharField(column_name='name', max_length=10, null=False)
+    surname = CharField(column_name='surname', max_length=10, null=False)
     phone_number = CharField(column_name='phone_number', max_length=20, unique=True, null=False)
-    description = TextField(column_name='description')
+    notes = TextField(column_name='notes')
 
 
 class RegistrationsDefault(Model):
+    """
+    A class describing unrelated fields for the registrations table
+
+    Attributes:
+        id: peewee.UUIDField
+            recording ID
+        date: peewee.DateField
+            recording date
+        time: peewee.TimeField
+            recording time
+        confirmation_day: peewee.BooleanField
+            confirmation per day
+        confirmation_two_hours: peewee.BooleanField
+            confirmation in two hours
+        notes: peewee.TextField
+            notes about the record
+    """
     id = UUIDField(column_name='id', unique=True, primary_key=True, default=lambda: uuid4())
     date = DateField(column_name='date', null=False)
     time = TimeField(column_name='time', null=False)
     confirmation_day = BooleanField(column_name='confirmation_day', null=False, default=False)
     confirmation_two_hours = BooleanField(column_name='confirmation_two_hours', null=False, default=False)
-    description = TextField(column_name='description')
+    notes = TextField(column_name='notes')

@@ -17,6 +17,9 @@ objects_rw: Manager = Manager(db_pool)
 
 
 class UsersRW(UsersDefault):
+    """
+    The class that describes the connection to the table write-only users
+    """
     class Meta:
         schema = 'lash'
         table_name = 'users'
@@ -24,6 +27,13 @@ class UsersRW(UsersDefault):
 
 
 class RegistrationsRW(RegistrationsDefault):
+    """
+    The class that describes the connection to the table write-only registrations
+
+    Attributes:
+        user_id: peewee.ForeignKeyField
+            foreign key to users table
+    """
     user_id = ForeignKeyField(UsersRW, field='tg_id', backref='registrations_user_fk', column_name='user_id',
                               on_delete='restrict', on_update='cascade')
 

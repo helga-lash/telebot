@@ -1,3 +1,4 @@
 -r helpers.txt
 aiopg~=1.5.0a1
 peewee-async~=0.10.1b0
+aiogram~=3.6.0

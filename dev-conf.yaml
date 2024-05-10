@@ -22,5 +22,4 @@ app:
   tgBot:
     token: 6870999386:AAGccloydrBobPuFvzjrMWYKkLpMRSzxy3I   # TG_TOKEN - string, token for telegram bot
     admins:                                                 # TG_ADMINS - string "hurdur1, hurdur2, hurdur3"
-      - hurdur1
-      - hurdur2
+      - 422100870
