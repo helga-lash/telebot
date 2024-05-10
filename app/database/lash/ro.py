@@ -17,6 +17,9 @@ objects_ro: Manager = Manager(db_pool)
 
 
 class UsersRO(UsersDefault):
+    """
+    The class that describes the connection to the table read-only users
+    """
     class Meta:
         schema = 'lash'
         table_name = 'users'
@@ -24,6 +27,13 @@ class UsersRO(UsersDefault):
 
 
 class RegistrationsRO(RegistrationsDefault):
+    """
+    The class that describes the connection to the table read-only registrations
+
+    Attributes:
+        user_id: peewee.ForeignKeyField
+            foreign key to users table
+    """
     user_id = ForeignKeyField(UsersRO, field='tg_id', backref='registrations_user_fk', column_name='user_id',
                               on_delete='restrict', on_update='cascade')
 
