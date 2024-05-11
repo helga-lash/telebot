@@ -10,7 +10,7 @@ db_pool: PooledPostgresqlDatabase = PooledPostgresqlDatabase(
     password=pgs_conf.rw.password,
     host=pgs_conf.rw.host,
     port=pgs_conf.rw.port,
-    max_connections=5
+    max_connections=pgs_conf.rw.maxConn
 )
 
 objects_rw: Manager = Manager(db_pool)
