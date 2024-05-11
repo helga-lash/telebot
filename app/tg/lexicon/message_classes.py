@@ -12,8 +12,8 @@ class Messages:
         techProblems: str
             message sent to the user when technical problems occur
     """
-    notMatch: str = 'Я Вас не понимаю\.\n' \
-                    'Для получения дополнительной информации введите /help или воспользуйтесь меню\.'
+    notMatch: str = ('Я Вас не понимаю\.\n'
+                    'Для получения дополнительной информации введите /help или воспользуйтесь меню\.')
     techProblems: str = ('Извините, произошел сбой системы\.\n'
                          'Повторите попытку позже\.')
     info: str = 'Что именно Вас интересует\?'

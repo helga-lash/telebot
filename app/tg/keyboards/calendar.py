@@ -1,6 +1,5 @@
 import calendar
-from datetime import datetime, timedelta
-from enum import Enum
+from datetime import datetime, timedelta, time
 
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -8,31 +7,7 @@ from aiogram.types import CallbackQuery
 from aiogram.filters.callback_data import CallbackData
 
 from configuration import logger
-
-
-class LexWeekDay(Enum):
-    mon: str = 'Пн'
-    tue: str = 'Вт'
-    wed: str = 'Ср'
-    thu: str = 'Чт'
-    fri: str = 'Пт'
-    sat: str = 'Сб'
-    sun: str = 'Вс'
-
-
-class LexMonthRed(Enum):
-    jan: str = 'Янв'
-    feb: str = 'Фев'
-    mar: str = 'Мар'
-    apr: str = 'Апр'
-    may: str = 'Май'
-    jun: str = 'Июнь'
-    jul: str = 'Июль'
-    aug: str = 'Авг'
-    sep: str = 'Сен'
-    oct: str = 'Окт'
-    nov: str = 'Ноя'
-    dec: str = 'Дек'
+from helpers_functions import check_month, check_day
 
 
 class CalendarCallback(CallbackData, prefix='calendar'):
@@ -45,9 +20,32 @@ class CalendarCallback(CallbackData, prefix='calendar'):
 class SimpleCalendar:
 
     @staticmethod
-    def month(month: int = datetime.now().month) -> str:
-        logger.error(f"!!!!{month}!!!!\n!!!!{calendar.month_abbr[month].lower()}!!!!")
-        return eval(f"str(LexMonthRed.{calendar.month_abbr[month].lower()}.value)")
+    def __month(month: int = datetime.now().month) -> str:
+        match month:
+            case 1:
+                return 'Янв'
+            case 2:
+                return 'Фев'
+            case 3:
+                return 'Мар'
+            case 4:
+                return 'Апр'
+            case 5:
+                return 'Май'
+            case 6:
+                return 'Июнь'
+            case 7:
+                return 'Июль'
+            case 8:
+                return 'Авг'
+            case 9:
+                return 'Сен'
+            case 10:
+                return 'Окт'
+            case 11:
+                return 'Ноя'
+            case 12:
+                return 'Дек'
 
     async def start_calendar(self, year: int = datetime.now().year,
                              month: int = datetime.now().month) -> InlineKeyboardMarkup:
@@ -55,44 +53,46 @@ class SimpleCalendar:
         Creates an inline keyboard with the provided year and month
         :param int year: Year to use in the calendar, if None the current year is used.
         :param int month: Month to use in the calendar, if None the current month is used.
-        :return: Returns InlineKeyboardMarkup object with the calendar.
+        :return: InlineKeyboardMarkup object with the calendar.
         """
         kb_builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
         buttons: list[InlineKeyboardButton] = []
         ignore_callback = CalendarCallback(act="IGNORE", year=year, month=month, day=0)  # for buttons with no answer
         # First row - Month and Year
-        buttons.append(InlineKeyboardButton(text="<<", callback_data=CalendarCallback(act="PREV-YEAR",
-                                                                                      year=year, month=month,
-                                                                                      day=1).pack()))
-        buttons.append(InlineKeyboardButton(text=f'{self.month(month)} {str(year)}',
+        first_row = await check_month(month)
+        if not first_row['previous']:
+            buttons.append(InlineKeyboardButton(text=" ", callback_data=ignore_callback.pack()))
+        else:
+            buttons.append(InlineKeyboardButton(text="<<", callback_data=CalendarCallback(act="PREV-MONTH",
+                                                                                          year=year, month=month,
+                                                                                          day=1).pack()))
+        buttons.append(InlineKeyboardButton(text=f'{self.__month(month)} {str(year)}',
                                             callback_data=ignore_callback.pack()))
-        buttons.append(InlineKeyboardButton(text=">>", callback_data=CalendarCallback(act="NEXT-YEAR",
-                                                                                      year=year, month=month,
-                                                                                      day=1).pack()))
+        if not first_row['next']:
+            buttons.append(InlineKeyboardButton(text=" ", callback_data=ignore_callback.pack()))
+        else:
+            buttons.append(InlineKeyboardButton(text=">>", callback_data=CalendarCallback(act="NEXT-MONTH",
+                                                                                          year=year, month=month,
+                                                                                          day=1).pack()))
         # Second row - Week Days
-        for day in LexWeekDay:
-            buttons.append(InlineKeyboardButton(text=day.value, callback_data=ignore_callback.pack()))
+        for day_week in ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']:
+            buttons.append(InlineKeyboardButton(text=day_week, callback_data=ignore_callback.pack()))
         # Calendar rows - Days of month
         month_calendar = calendar.monthcalendar(year, month)
         for week in month_calendar:
             for day in week:
-                if day == 0:
-                    buttons.append(InlineKeyboardButton(text=" ", callback_data=ignore_callback.pack()))
-                    continue
-                buttons.append(InlineKeyboardButton(text=str(day),
-                                                    callback_data=CalendarCallback(act="DAY",
-                                                                                   year=year, month=month,
-                                                                                   day=day).pack()))
-        # Last row - Buttons
-        buttons.append(InlineKeyboardButton(text="<",
-                                            callback_data=CalendarCallback(act="PREV-MONTH",
-                                                                           year=year, month=month,
-                                                                           day=day).pack()))
-        buttons.append(InlineKeyboardButton(text=" ", callback_data=ignore_callback.pack()))
-        buttons.append(InlineKeyboardButton(text=">",
-                                            callback_data=CalendarCallback(act="NEXT-MONTH",
-                                                                           year=year, month=month,
-                                                                           day=day).pack()))
+                ver_day = await check_day(year, month, day)
+                if ver_day['cb']:
+                    buttons.append(InlineKeyboardButton(text=ver_day['text'],
+                                                        callback_data=CalendarCallback(act="DAY",
+                                                                                       year=year, month=month,
+                                                                                       day=day).pack()))
+                else:
+                    buttons.append(InlineKeyboardButton(text=ver_day['text'], callback_data=ignore_callback.pack()))
+        # Last row - Button
+        buttons.append(InlineKeyboardButton(text="❌ - нет свободных окошек",
+                                            callback_data=ignore_callback.pack()))
+
         kb_builder.row(*buttons)
         kb_builder.adjust(3, 7)
         return kb_builder.as_markup()

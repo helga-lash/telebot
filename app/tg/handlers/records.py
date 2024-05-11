@@ -4,8 +4,7 @@ from aiogram import F
 
 from tg.lexicon import lex_buttons, lex_messages
 from tg.keyboards import Keyboard, SimpleCalendar, CalendarCallback
-from configuration import logger
-
+from configuration import logger, apl_conf
 
 records_router: Router = Router()
 
