@@ -41,6 +41,10 @@ class Buttons:
             button to view bulks
         next: Button
             button to view next photos
+        yes: Button
+            positive answer button
+        no: Button
+            negative answer button
     """
     record: Button = field(default_factory=lambda: Button(
         text='Запись',
@@ -87,3 +91,13 @@ class Buttons:
         callback='next'
     )
                              )
+    yes: Button = field(default_factory=lambda: Button(
+        text='Да',
+        callback='yes'
+    )
+                             )
+    no: Button = field(default_factory=lambda: Button(
+        text='Нет',
+        callback='no'
+    )
+                        )

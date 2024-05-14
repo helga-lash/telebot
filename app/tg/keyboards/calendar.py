@@ -12,6 +12,19 @@ from helpers.work_classes import ReturnEntity
 
 
 class CalendarCallback(CallbackData, prefix='calendar'):
+    """
+    Class for automatic generation of callbacks
+
+    Arguments:
+        act: str
+            user-selected action
+        year: int
+            user selected year
+        month: int
+            user selected month
+        day: int
+            user selected day
+    """
     act: str
     year: int
     month: int
@@ -19,6 +32,14 @@ class CalendarCallback(CallbackData, prefix='calendar'):
 
 
 class SimpleCalendar:
+    """
+    Class that generates a calendar for the user
+
+    Methods:
+        __month - the method returns the human-readable name of the month by its number
+        start_calendar - creates an inline keyboard with the provided year and month
+        process_selection - the method generates a new calendar if forward or backward is pressed
+    """
 
     @staticmethod
     def __month(month: int = datetime.now().month) -> str:

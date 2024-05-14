@@ -29,15 +29,22 @@ class Commands:
             telegram start command
         help: Command
             telegram help command
+        cancel: Command
+            telegram command to cancel any actions
     """
     start: Command = field(default_factory=lambda: Command(
         command='start',
         descr='Начать работу',
-        msg='Здравствуйте{name}\!\nЧем могу помочь\?')
+        msg='Здравствуйте{name}!\nЧем могу помочь?')
                            )
     help: Command = field(default_factory=lambda: Command(
         command='help',
         descr='Информация',
-        msg='Здесь вы можете получить информацию обо мне и записаться на процедуру\.\nДля начала работы введите /start '
-            'или воспользуйтесь меню\.')
+        msg='Здесь вы можете получить информацию обо мне и записаться на процедуру.\nДля начала работы введите '
+            '/start или воспользуйтесь меню.')
+                          )
+    cancel: Command = field(default_factory=lambda: Command(
+        command='cancel',
+        descr='Отмена',
+        msg='Вы отменили все изменения.\nДля продолжения работы с ботом воспользуйтесь командой /start.')
                           )
