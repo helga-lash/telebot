@@ -18,6 +18,7 @@ async def num_rec_day(year: int, month: int, day: int) -> ReturnEntity:
     try:
         result.entity = await objects_ro.count(RegistrationsRO.select().where(RegistrationsRO.date == dt))
         result.error = False
+        logger.debug(f'Received number of records for {year}-{month}-{day} in the amount of {result.entity}')
     except Exception as error:
         logger.warning(error)
         result.error_text_append('Database access error')
