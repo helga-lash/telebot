@@ -20,7 +20,8 @@ async def user_by_id(tg_id: int) -> ReturnEntity:
             name=record.name,
             surname=record.surname,
             phone_number=record.phone_number,
-            notes=record.notes
+            notes=record.notes,
+            admin=record.admin
         )
         result.error = False
         logger.debug(f'Found user named {record.surname} {record.name}')

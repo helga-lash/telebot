@@ -33,6 +33,24 @@ class Messages:
             message sent when requesting confirmation of user data
         recordOk: str
             message sent when an entry is added
+        userOk: str
+            message sent when a admin user is registered in the system
+        admNotRegistered: str
+            message sent when the admin is not registered in the system
+        name: str
+            message sent when requesting the name
+        recordsWorker: str
+            message sent when going to work records
+        recordsWorkerCalendar: str
+            message sent when going to work records calendar
+        infoWorker: str
+            message sent when going to work information
+        addedPhoto: str
+            message sent when going to work added photos
+        addNotes: str
+            message sent when going to work added notes
+        replaceNotes: str
+            message sent when going to work replace notes
     """
     notMatch: str = 'Я Вас не понимаю.\nДля получения дополнительной информации введите /help или воспользуйтесь меню.'
     techProblems: str = 'Извините, произошел сбой системы.\nПовторите попытку позже.'
@@ -48,6 +66,17 @@ class Messages:
     userSurname: str = 'Введите свою фамилию.'
     userPhone: str = 'Введите номер телефона для связи с Вами в формате "79*********".'
     userConfirm: str = 'Вас зовут {surname} {name}.\nС Вами можно связаться по номеру {phone}.\nВсё верно?'
+    userOk: str = 'Вы зарегистрированы в системе.\nДля продолжения работы с ботом воспользуйтесь командой /start.'
     recordOk: str = ('Ваша запись зарегистрирована, {name}.\nВам придет запрос на подтверждение записи за сутки и за '
-                     'два часа за неё.\nСпасибо, что воспользовались онлайн записью!\nДля продолжения работы с ботом '
+                     'два часа до неё.\nСпасибо, что воспользовались онлайн записью!\nДля продолжения работы с ботом '
                      'воспользуйтесь командой /start.')
+    admNotRegistered: str = ('Вы не зарегистрированы в систем.\n'
+                             'Для продолжения работы с ботом пройдите регистрацию нажав кнопку да.')
+    name: str = 'Введите своё имя.'
+    recordsWorker: str = 'Работа с записями.'
+    recordsWorkerCalendar: str = 'Информация за какой день Вас интересует?'
+    infoWorker: str = 'Работа с информацией.'
+    addedPhoto: str = 'Фото в какую категорию Вы хотите добавить?'
+    addNotes: str = 'Введите заметки для добавления.'
+    replaceNotes: str = 'Введите заметки для замены.'
+    reserveTime: str = 'Выберите время которое хотите зарезервировать.'

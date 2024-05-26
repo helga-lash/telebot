@@ -7,7 +7,7 @@ from aiogram.utils.formatting import Text
 from datetime import date, time
 
 from tg.lexicon import lex_buttons, lex_messages, lex_commands
-from tg.keyboards import Keyboard, SimpleCalendar, CalendarCallback
+from tg.keyboards import Keyboard, SimpleCalendar, SimpleCalendarCallback
 from tg.states import FSMRecord, FSMUser
 from configuration import logger, apl_conf
 from database.functions import rec_day, user_by_id, create_user, create_registration
@@ -38,13 +38,13 @@ async def record_route(callback: CallbackQuery, state: FSMContext) -> None:
         await state.set_state(FSMRecord.date)
 
 
-@records_router.callback_query(CalendarCallback.filter(), FSMRecord.date)
+@records_router.callback_query(SimpleCalendarCallback.filter(), FSMRecord.date)
 async def process_simple_calendar_route(callback: CallbackQuery,
-                                        callback_data: CalendarCallback, state: FSMContext) -> None:
+                                        callback_data: SimpleCalendarCallback, state: FSMContext) -> None:
     """
     A function that processes the returned data from the calendar in state FSMRecord.date
     :param callback: aiogram.types.CallbackQuery
-    :param callback_data: tg.keyboards.CalendarCallback
+    :param callback_data: tg.keyboards.SimpleCalendarCallback
     :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
@@ -78,7 +78,7 @@ async def process_simple_calendar_route(callback: CallbackQuery,
                     buttons = []
                     for tm in apl_conf.tgBot.recordTime:
                         if tm not in [x.time for x in records.entity]:
-                            buttons.append(str(tm))
+                            buttons.append(f'{str(tm).split(':')[0]}:{str(tm).split(':')[1]}')
                     keyboard = Keyboard(3).create_inline(*buttons)
                     await callback.message.answer(Text(lex_messages.recordTime).as_markdown(), reply_markup=keyboard)
                     await state.set_state(FSMRecord.time)
@@ -115,6 +115,7 @@ async def record_time_route(callback: CallbackQuery, state: FSMContext) -> None:
             )
         else:
             keyboard = Keyboard(1, '-registration').create_inline(lex_buttons.no)
+            await state.update_data(admin=False)
             await callback.message.answer(Text(lex_messages.userName).as_markdown(), reply_markup=keyboard)
             await state.set_state(FSMRecord.user)
 
@@ -190,8 +191,7 @@ async def not_registration_route(callback: CallbackQuery, state: FSMContext) -> 
     await callback.answer()
     await callback.message.delete_reply_markup()
     await state.set_state(FSMUser.name)
-    keyboard = Keyboard(1, '-registration').create_inline(lex_buttons.no)
-    await callback.message.answer(Text(lex_messages.userName).as_markdown(), reply_markup=keyboard)
+    await callback.message.answer(Text(lex_messages.name).as_markdown())
 
 
 @records_router.callback_query(FSMUser.confirmation, F.data == f'{lex_buttons.yes.callback}-user-reg')
@@ -206,22 +206,27 @@ async def create_user_route(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
     await callback.message.delete_reply_markup()
     data = await state.get_data()
-    create = await create_user(callback.from_user.id, data['name'], data['surname'], data['phone_number'])
+    create = await create_user(callback.from_user.id, data['name'], data['surname'],
+                               data['phone_number'], data['admin'])
     if create.error:
         logger.warning(create.errorText)
         await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
         await state.clear()
     else:
-        await state.update_data(user=create.entity.tg_id)
-        await state.set_state(FSMRecord.confirmation)
-        keyboard = Keyboard(2, '-record').create_inline(lex_buttons.yes, lex_buttons.no)
-        await callback.message.answer(
-            Text(lex_messages.recordConfirm.format(
-                day=data['date'],
-                tm=data['time']
-            )).as_markdown(),
-            reply_markup=keyboard
-        )
+        if str(callback.from_user.id) not in apl_conf.tgBot.admins:
+            await state.update_data(user=create.entity.tg_id)
+            await state.set_state(FSMRecord.confirmation)
+            keyboard = Keyboard(2, '-record').create_inline(lex_buttons.yes, lex_buttons.no)
+            await callback.message.answer(
+                Text(lex_messages.recordConfirm.format(
+                    day=data['date'],
+                    tm=data['time']
+                )).as_markdown(),
+                reply_markup=keyboard
+            )
+        else:
+            await state.clear()
+            await callback.message.answer(Text(lex_messages.userOk).as_markdown())
 
 
 @records_router.callback_query(FSMRecord.confirmation, F.data == f'{lex_buttons.yes.callback}-record')

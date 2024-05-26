@@ -21,4 +21,21 @@ class FSMRecord(StatesGroup):
     confirmation: State = State()
 
 
-__all__ = 'FSMRecord'
+class FSMRecordNotes(StatesGroup):
+    """
+    A class describing the state machine for recording a procedure
+
+    Arguments:
+        id: aiogram.filters.state.State
+        replace: aiogram.filters.state.State
+        add: aiogram.filters.state.State
+    """
+    id: State = State()
+    replace: State = State()
+    add: State = State()
+
+
+__all__ = (
+    'FSMRecord',
+    'FSMRecordNotes'
+)
