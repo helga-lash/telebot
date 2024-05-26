@@ -23,6 +23,7 @@ class UsersDefault(Model):
     surname = CharField(column_name='surname', max_length=10, null=False)
     phone_number = CharField(column_name='phone_number', max_length=20, unique=True, null=False)
     notes = TextField(column_name='notes')
+    admin = BooleanField(column_name='admin', null=False, default=False)
 
 
 class RegistrationsDefault(Model):

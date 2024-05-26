@@ -3,5 +3,6 @@ CREATE TABLE IF NOT EXISTS users(
    name VARCHAR (10) NOT NULL,
    surname VARCHAR (10) NOT NULL,
    phone_number VARCHAR (20) UNIQUE NOT NULL,
-   notes TEXT
+   notes TEXT,
+   admin bool NOT NULL DEFAULT false
 );

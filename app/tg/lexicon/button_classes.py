@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass(slots=True)
@@ -101,3 +100,23 @@ class Buttons:
         callback='no'
     )
                         )
+    recordsView: Button = field(default_factory=lambda: Button(
+        text='Просмотр записей',
+        callback='recordsView'
+    )
+                                )
+    timeReserve: Button = field(default_factory=lambda: Button(
+        text='Зарезервировать время',
+        callback='timeReserve'
+    )
+                                )
+    addedPhoto: Button = field(default_factory=lambda: Button(
+        text='Добавить фото',
+        callback='addedPhoto'
+    )
+                               )
+    changeContact: Button = field(default_factory=lambda: Button(
+        text='Изменить контакты',
+        callback='changeContact'
+    )
+                                  )

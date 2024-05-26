@@ -12,9 +12,11 @@ class UserRecord:
         surname: str
         phone_number: str
         notes: str
+        admin: bool
     """
     tg_id: str
     name: str
     surname: str
     phone_number: str
     notes: str = None
+    admin: bool = False
