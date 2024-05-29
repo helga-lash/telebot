@@ -266,14 +266,14 @@ class AdminCalendar:
         buttons: list[InlineKeyboardButton] = []
         ignore_callback = AdminCalendarCallback(act="IGNORE", year=year, month=month, day=0)
         # First row - Month and Year
-        buttons.append(InlineKeyboardButton(text="<<", callback_data=AdminCalendarCallback(act="PREV-YEAR",
-                                                                                           year=year, month=month,
-                                                                                           day=1).pack()))
+        buttons.append(InlineKeyboardButton(text="<", callback_data=AdminCalendarCallback(act="PREV-MONTH",
+                                                                                          year=year, month=month,
+                                                                                          day=1).pack()))
         buttons.append(InlineKeyboardButton(text=f'{self.__month(month)} {str(year)}',
                                             callback_data=ignore_callback.pack()))
-        buttons.append(InlineKeyboardButton(text=">>", callback_data=AdminCalendarCallback(act="NEXT-YEAR",
-                                                                                           year=year, month=month,
-                                                                                           day=1).pack()))
+        buttons.append(InlineKeyboardButton(text=">", callback_data=AdminCalendarCallback(act="NEXT-MONTH",
+                                                                                          year=year, month=month,
+                                                                                          day=1).pack()))
         # Second row - Week Days
         for day_week in ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']:
             buttons.append(InlineKeyboardButton(text=day_week, callback_data=ignore_callback.pack()))
@@ -294,13 +294,13 @@ class AdminCalendar:
                                                     callback_data=AdminCalendarCallback(act="DAY",
                                                                                         year=year, month=month,
                                                                                         day=day).pack()))
-        buttons.append(InlineKeyboardButton(text="<",
-                                            callback_data=AdminCalendarCallback(act="PREV-MONTH",
+        buttons.append(InlineKeyboardButton(text="<<",
+                                            callback_data=AdminCalendarCallback(act="PREV-YEAR",
                                                                                 year=year, month=month,
                                                                                 day=day).pack()))
         buttons.append(InlineKeyboardButton(text="(0)-записей", callback_data=ignore_callback.pack()))
-        buttons.append(InlineKeyboardButton(text=">",
-                                            callback_data=AdminCalendarCallback(act="NEXT-MONTH",
+        buttons.append(InlineKeyboardButton(text=">>",
+                                            callback_data=AdminCalendarCallback(act="NEXT-YEAR",
                                                                                 year=year, month=month,
                                                                                 day=day).pack()))
         if not result.error:

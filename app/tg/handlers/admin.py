@@ -3,13 +3,13 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram import F
 from aiogram.utils.formatting import Text
-from datetime import date
+from datetime import date, time
 
 from configuration import logger, apl_conf
 from tg.lexicon import lex_buttons, lex_messages
 from tg.keyboards import Keyboard, AdminCalendar, AdminCalendarCallback, RecordsKeyboard, RecordCallback
-from tg.states import FSMUser, FSMRecordNotes, FSMRecord
-from database import rec_day, record_update_notes
+from tg.states import FSMUser, FSMRecordNotes, FSMRecordReservation
+from database import rec_day, record_update_notes, create_registration
 
 admin_router = Router()
 
@@ -30,6 +30,7 @@ async def admin_reg_route(callback: CallbackQuery, state: FSMContext) -> None:
 
 
 @admin_router.callback_query(F.data == f'{lex_buttons.record.callback}-admin')
+@admin_router.callback_query(F.data == f'{lex_buttons.back.callback}-calendar')
 async def admin_records_view_route(callback: CallbackQuery) -> None:
     """
     A function that processes the returned data from the record button in admin menu
@@ -72,9 +73,13 @@ async def admin_calendar_route(callback: CallbackQuery, callback_data: AdminCale
                 for record in (sorted(records.entity, key=lambda x: x.time)):
                     msg_text += (f'{record.time.strftime("%H:%M")} - {record.user.surname} {record.user.name} '
                                  f'{record.user.phone_number}\n')
-                msg_text += ('Для получения дополнительной информации о записи нажмите кнопку со временем.\n'
-                             f'Для резервирования времени нажмите кнопку "{lex_buttons.timeReserve.text}"')
-                keyboard = await RecordsKeyboard().start(records.entity)
+                if len(records.entity) > 0:
+                    msg_text += 'Для получения дополнительной информации о записи нажмите кнопку со временем.\n'
+                if date.today() <= day:
+                    msg_text += f'Для резервирования времени нажмите кнопку "{lex_buttons.timeReserve.text}"'
+                if msg_text == '':
+                    msg_text += f'{day.strftime("%d-%m-%Y")} не было записей.'
+                keyboard = await RecordsKeyboard().start(records.entity, day)
                 await state.update_data(date=day)
                 await callback.message.answer(Text(msg_text).as_markdown(), reply_markup=keyboard)
 
@@ -100,7 +105,69 @@ async def admin_time_reserve_route(callback: CallbackQuery, state: FSMContext) -
             buttons.append(f'{str(tm).split(':')[0]}:{str(tm).split(':')[1]}')
     keyboard = Keyboard(3).create_inline(*buttons)
     await callback.message.answer(Text(lex_messages.reserveTime).as_markdown(), reply_markup=keyboard)
-    await state.set_state(FSMRecord.time)
+    await state.set_state(FSMRecordReservation.time)
+
+
+@admin_router.callback_query(FSMRecordReservation.time)
+async def admin_record_reserve_route(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    A function that processes state FSMRecordReservation.time
+    :param callback: aiogram.types.CallbackQuery
+    :param state: aiogram.fsm.context.FSMContext
+    :return: None
+    """
+    await callback.answer()
+    await callback.message.delete_reply_markup()
+    await state.update_data(time=time(*[int(x) for x in callback.data.split(':')]))
+    await state.set_state(FSMRecordReservation.confirmation)
+    data = await state.get_data()
+    keyboard = Keyboard(2, '-record').create_inline(lex_buttons.yes, lex_buttons.no)
+    await callback.message.answer(
+        Text(lex_messages.recordReserved.format(
+            day=data['date'],
+            tm=data['time']
+        )).as_markdown(),
+        reply_markup=keyboard
+    )
+
+
+@admin_router.callback_query(F.data == f'{lex_buttons.no.callback}-record', FSMRecordReservation.confirmation)
+async def not_reservation_route(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    A function that processes the returned data from the no button for reserve time
+    :param callback: aiogram.types.CallbackQuery
+    :param state: aiogram.fsm.context.FSMContext
+    :return: None
+    """
+    await callback.answer()
+    await callback.message.delete_reply_markup()
+    await state.clear()
+    keyboard = await AdminCalendar().start_calendar()
+    if keyboard.error:
+        await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
+    else:
+        await callback.message.answer(Text(lex_messages.recordsWorkerCalendar).as_markdown(),
+                                      reply_markup=keyboard.entity)
+
+
+@admin_router.callback_query(F.data == f'{lex_buttons.yes.callback}-record', FSMRecordReservation.confirmation)
+async def reservation_route(callback: CallbackQuery, state: FSMContext) -> None:
+    """
+    A function that processes the returned data from the yes button for reserve time
+    :param callback: aiogram.types.CallbackQuery
+    :param state: aiogram.fsm.context.FSMContext
+    :return: None
+    """
+    await callback.answer()
+    await callback.message.delete_reply_markup()
+    data = await state.get_data()
+    create = await create_registration(data['date'], data['time'], callback.from_user.id)
+    if create.error:
+        logger.warning(create.errorText)
+        await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
+    else:
+        await callback.message.answer(Text(lex_messages.reservedOk.format(name=create.entity.user.name)).as_markdown())
+    await state.set_state()
 
 
 @admin_router.callback_query(RecordCallback.filter())
@@ -133,7 +200,7 @@ async def admin_record_replace_notes_route(message: Message, state: FSMContext) 
     else:
         await state.clear()
         msg_text = (f'Заметки изменены!\n'
-                    f'Дата: {record.entity.date.strftime("%Y-%m-%d")}\n'
+                    f'Дата: {record.entity.date.strftime("%d-%m-%Y")}\n'
                     f'Время: {record.entity.time.strftime("%H:%M")}\n'
                     f'Заметки: {record.entity.notes}\n'
                     f'Имя: {record.entity.user.name}\n'
@@ -148,7 +215,8 @@ async def admin_record_replace_notes_route(message: Message, state: FSMContext) 
             msg_text += f'Подтверждение за два часа: Да\n'
         else:
             msg_text += f'Подтверждение за два часа: Нет\n'
-        await message.answer(Text(msg_text).as_markdown())
+        keyboard = await Keyboard(1, '-calendar').create_inline(lex_buttons.back)
+        await message.answer(Text(msg_text).as_markdown(), reply_markup=keyboard)
 
 
 @admin_router.message(FSMRecordNotes.add)
@@ -167,7 +235,7 @@ async def admin_record_add_notes_route(message: Message, state: FSMContext) -> N
     else:
         await state.clear()
         msg_text = (f'Заметка добавлена!\n'
-                    f'Дата: {record.entity.date.strftime("%Y-%m-%d")}\n'
+                    f'Дата: {record.entity.date.strftime("%d-%m-%Y")}\n'
                     f'Время: {record.entity.time.strftime("%H:%M")}\n'
                     f'Заметки: {record.entity.notes}\n'
                     f'Имя: {record.entity.user.name}\n'
@@ -182,7 +250,8 @@ async def admin_record_add_notes_route(message: Message, state: FSMContext) -> N
             msg_text += f'Подтверждение за два часа: Да\n'
         else:
             msg_text += f'Подтверждение за два часа: Нет\n'
-        await message.answer(Text(msg_text).as_markdown())
+        keyboard = await Keyboard(1, '-calendar').create_inline(lex_buttons.back)
+        await message.answer(Text(msg_text).as_markdown(), reply_markup=keyboard)
 
 
 @admin_router.callback_query(F.data == f'{lex_buttons.info.callback}-admin')
