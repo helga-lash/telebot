@@ -51,6 +51,10 @@ class Messages:
             message sent when going to work added notes
         replaceNotes: str
             message sent when going to work replace notes
+        reserveTime: str
+            message sent when going to work reserve time
+        recordReserved: str
+            message sent when going to work record reserved
     """
     notMatch: str = 'Я Вас не понимаю.\nДля получения дополнительной информации введите /help или воспользуйтесь меню.'
     techProblems: str = 'Извините, произошел сбой системы.\nПовторите попытку позже.'
@@ -80,3 +84,5 @@ class Messages:
     addNotes: str = 'Введите заметки для добавления.'
     replaceNotes: str = 'Введите заметки для замены.'
     reserveTime: str = 'Выберите время которое хотите зарезервировать.'
+    recordReserved: str = 'Вы хотите зарезервировать запись на {day} в {tm}?'
+    reservedOk: str = '{name}, время успешно зарезервировано.'

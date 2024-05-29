@@ -35,7 +35,19 @@ class FSMRecordNotes(StatesGroup):
     add: State = State()
 
 
+class FSMRecordReservation(StatesGroup):
+    """
+    A class describing the state machine for recording reservation procedure
+
+    Arguments:
+        time: aiogram.filters.state.State
+    """
+    time: State = State()
+    confirmation: State = State()
+
+
 __all__ = (
     'FSMRecord',
-    'FSMRecordNotes'
+    'FSMRecordNotes',
+    'FSMRecordReservation',
 )

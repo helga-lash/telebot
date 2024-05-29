@@ -6,6 +6,7 @@ from aiogram.utils.formatting import Text
 from aiogram.fsm.context import FSMContext
 from uuid import UUID
 from enum import Enum
+from datetime import date
 
 from database.entities import RegistrationRecord
 from database import record_by_id, record_update_notes
@@ -50,10 +51,11 @@ class RecordsKeyboard:
         start: create an inline keyboard for the record buttons
     """
     @staticmethod
-    async def start(records: list[RegistrationRecord]) -> InlineKeyboardMarkup:
+    async def start(records: list[RegistrationRecord], day: date) -> InlineKeyboardMarkup:
         """
         Method to create an inline keyboard for record buttons
         :param records: list[RegistrationRecord]
+        :param day: date
         :return: InlineKeyboardMarkup
         """
         kb_builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
@@ -65,10 +67,14 @@ class RecordsKeyboard:
                     id=record.id,
                     action=RecordActions.view).pack()
             ))
-        if len(records) < len(apl_conf.tgBot.recordTime):
-            buttons.append(InlineKeyboardButton(
-                text=lex_buttons.timeReserve.text,
-                callback_data=lex_buttons.timeReserve.callback))
+        if date.today() <= day:
+            if len(records) < len(apl_conf.tgBot.recordTime):
+                buttons.append(InlineKeyboardButton(
+                    text=lex_buttons.timeReserve.text,
+                    callback_data=lex_buttons.timeReserve.callback))
+        buttons.append(InlineKeyboardButton(
+            text=lex_buttons.back.text,
+            callback_data=lex_buttons.back.callback + '-calendar'))
         width = 3
         if len(buttons) > width:
             width = 2
@@ -90,7 +96,7 @@ class RecordsKeyboard:
                 if record.error:
                     logger.warning(record.errorText)
                     await query.message.answer(Text(lex_messages.techProblems).as_markdown())
-                msg_text: str = (f'Дата: {record.entity.date.strftime("%Y-%m-%d")}\n'
+                msg_text: str = (f'Дата: {record.entity.date.strftime("%d-%m-%Y")}\n'
                                  f'Время: {record.entity.time.strftime("%H:%M")}\n'
                                  f'Заметки: {record.entity.notes}\n'
                                  f'Имя: {record.entity.user.name}\n'
@@ -121,9 +127,12 @@ class RecordsKeyboard:
                     callback_data=RecordCallback(
                         id=data.id,
                         action=RecordActions.add).pack(
-                    ))]
+                    )), InlineKeyboardButton(
+                    text=lex_buttons.back.text,
+                    callback_data=lex_buttons.back.callback + '-calendar')
+                ]
                 await query.message.answer(Text(msg_text).as_markdown(),
-                                           reply_markup=kb_builder.row(*buttons).as_markup())
+                                           reply_markup=kb_builder.row(*buttons).adjust(1).as_markup())
             case RecordActions.delete:
                 record = await record_update_notes(data.id)
                 if record.error:

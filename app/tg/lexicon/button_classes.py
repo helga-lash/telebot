@@ -44,6 +44,16 @@ class Buttons:
             positive answer button
         no: Button
             negative answer button
+        recordsView: Button
+            button to view records
+        timeReserve: Button
+            button to reserve time
+        addedPhoto: Button
+            button for added photos
+        changeContact: Button
+            button to change contact
+        back: Button
+            button to go back
     """
     record: Button = field(default_factory=lambda: Button(
         text='Запись',
@@ -118,5 +128,10 @@ class Buttons:
     changeContact: Button = field(default_factory=lambda: Button(
         text='Изменить контакты',
         callback='changeContact'
+    )
+                                  )
+    back: Button = field(default_factory=lambda: Button(
+        text='Назад',
+        callback='back'
     )
                                   )
