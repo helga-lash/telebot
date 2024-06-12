@@ -67,6 +67,8 @@ class Messages:
             message sent when going to work added photo ok
         addPhotoNotPhoto: str
             message sent when going to work add photo not photo
+        photoShow: str
+            message sent when going to work photo show
     """
     notMatch: str = 'Я Вас не понимаю.\nДля получения дополнительной информации введите /help или воспользуйтесь меню.'
     techProblems: str = 'Извините, произошел сбой системы.\nПовторите попытку позже.'
@@ -104,3 +106,14 @@ class Messages:
     addPhotoBulks: str = 'Для добавления фотографий в категорию "Объемы" загрузите от одной до трех фото.'
     addedPhotoOk: str = 'Фотография успешно загружена.'
     addPhotoNotPhoto: str = 'Пришлите, пожалуйста, фотографии.'
+    photoShow: str = 'Нажмите "Следующие" для просмотра фото из этой же категории или выберите другое действие.'
+    contactShow: str = ('Номер телефона для связи: {phone}\n'
+                        'WhatsApp: {whatsapp}\n'
+                        'Instagram: {instagram}\n'
+                        'VK: {vk}')
+    adminRecordOkNotify: str = ('Новая запись на процедуру:\n'
+                                'Дата: {date}\n'
+                                'Время: {time}\n'
+                                'Имя: {name}\n'
+                                'Фамилия: {surname}\n'
+                                'Телефон: {phone}')
