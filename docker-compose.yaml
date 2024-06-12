@@ -48,3 +48,33 @@ services:
     depends_on:
       database:
         condition: service_healthy
+
+  s3:
+    image: quay.io/minio/minio:RELEASE.2024-05-28T17-19-04Z
+    container_name: minio
+    healthcheck:
+      test: [ "CMD", "mc", "ready", "local" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    environment:
+      TZ: Europe/Moscow
+      MINIO_ROOT_USER: testUser
+      MINIO_ROOT_PASSWORD: testPassword
+      MINIO_VOLUMES: /data
+      MINIO_CONSOLE_ADDRESS: :9001
+      MINIO_REGION: ru-krasnodar-kropotkin
+    volumes:
+      - ./minio/data:/data
+    command:
+      - 'server'

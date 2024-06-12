@@ -26,6 +26,7 @@ async def record_route(callback: CallbackQuery, state: FSMContext) -> None:
     :return: None
     """
     await callback.answer()
+    await state.clear()
     logger.debug(f'The user with the ID={callback.from_user.id} clicked the record button')
     await callback.message.delete_reply_markup()
     keyboard = await SimpleCalendar().start_calendar()
