@@ -55,6 +55,18 @@ class Messages:
             message sent when going to work reserve time
         recordReserved: str
             message sent when going to work record reserved
+        addPhotoTrends: str
+            message sent when going to work add photo trends
+        addPhotoNaturals: str
+            message sent when going to work add photo naturals
+        addPhotoReviews: str
+            message sent when going to work add photo reviews
+        addPhotoBulks: str
+            message sent when going to work add photo bulks
+        addedPhotoOk: str
+            message sent when going to work added photo ok
+        addPhotoNotPhoto: str
+            message sent when going to work add photo not photo
     """
     notMatch: str = 'Я Вас не понимаю.\nДля получения дополнительной информации введите /help или воспользуйтесь меню.'
     techProblems: str = 'Извините, произошел сбой системы.\nПовторите попытку позже.'
@@ -86,3 +98,9 @@ class Messages:
     reserveTime: str = 'Выберите время которое хотите зарезервировать.'
     recordReserved: str = 'Вы хотите зарезервировать запись на {day} в {tm}?'
     reservedOk: str = '{name}, время успешно зарезервировано.'
+    addPhotoTrends: str = 'Для добавления фотографий в категорию "Тренды" загрузите от одной до трех фото.'
+    addPhotoNaturals: str = 'Для добавления фотографий в категорию "Естественные" загрузите от одной до трех фото.'
+    addPhotoReviews: str = 'Для добавления фотографий в категорию "Отзывы" загрузите от одной до трех фото.'
+    addPhotoBulks: str = 'Для добавления фотографий в категорию "Объемы" загрузите от одной до трех фото.'
+    addedPhotoOk: str = 'Фотография успешно загружена.'
+    addPhotoNotPhoto: str = 'Пришлите, пожалуйста, фотографии.'

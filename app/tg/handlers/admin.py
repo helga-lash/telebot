@@ -1,15 +1,20 @@
+import asyncio
+
 from aiogram.dispatcher.router import Router
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram import F
 from aiogram.utils.formatting import Text
 from datetime import date, time
+from io import BytesIO
 
 from configuration import logger, apl_conf
 from tg.lexicon import lex_buttons, lex_messages
 from tg.keyboards import Keyboard, AdminCalendar, AdminCalendarCallback, RecordsKeyboard, RecordCallback
-from tg.states import FSMUser, FSMRecordNotes, FSMRecordReservation
+from tg.states import FSMUser, FSMRecordNotes, FSMRecordReservation, FSMPhotoDownload
+from tg.helpers_functions import remove_message
 from database import rec_day, record_update_notes, create_registration
+from s3_minio import s3_client
 
 admin_router = Router()
 
@@ -255,6 +260,7 @@ async def admin_record_add_notes_route(message: Message, state: FSMContext) -> N
 
 
 @admin_router.callback_query(F.data == f'{lex_buttons.info.callback}-admin')
+@admin_router.callback_query(F.data == f'{lex_buttons.back.callback}-admin')
 async def admin_info_route(callback: CallbackQuery) -> None:
     """
     A function that processes the returned data from the info button in admin menu
@@ -280,65 +286,118 @@ async def admin_change_contact_route(callback: CallbackQuery) -> None:
 
 
 @admin_router.callback_query(F.data == lex_buttons.addedPhoto.callback)
-async def admin_added_photo_route(callback: CallbackQuery) -> None:
+@admin_router.callback_query(F.data == f'{lex_buttons.back.callback}-photos', FSMPhotoDownload.waitePhoto)
+async def admin_added_photo_route(callback: CallbackQuery, state: FSMContext) -> None:
     """
     A function that processes the returned data from the added photo button in admin menu
     :param callback: aiogram.types.CallbackQuery
+    :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
     await callback.answer()
     await callback.message.delete_reply_markup()
+    await state.clear()
     keyboard = Keyboard(2, '-admin').create_inline(lex_buttons.reviews, lex_buttons.trends,
-                                                   lex_buttons.naturals, lex_buttons.bulks)
+                                                   lex_buttons.naturals, lex_buttons.bulks, lex_buttons.back)
     await callback.message.answer(Text(lex_messages.addedPhoto).as_markdown(), reply_markup=keyboard)
 
 
 @admin_router.callback_query(F.data == f'{lex_buttons.trends.callback}-admin')
-async def admin_reviews_route(callback: CallbackQuery) -> None:
+async def admin_reviews_route(callback: CallbackQuery, state: FSMContext) -> None:
     """
     A function that processes the returned data from the added photo in category trends button in admin menu
     :param callback: aiogram.types.CallbackQuery
+    :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
     await callback.answer()
     await callback.message.delete_reply_markup()
-    await callback.message.answer(Text('Здесь будет добавление фотографий в категорию "Тренды"').as_markdown())
+    await state.set_state(FSMPhotoDownload.waitePhoto)
+    await state.update_data(bucket='trends')
+    keyboard = Keyboard(1, '-photos').create_inline(lex_buttons.back)
+    await callback.message.answer(Text(lex_messages.addPhotoTrends).as_markdown(), reply_markup=keyboard)
 
 
 @admin_router.callback_query(F.data == f'{lex_buttons.naturals.callback}-admin')
-async def admin_reviews_route(callback: CallbackQuery) -> None:
+async def admin_reviews_route(callback: CallbackQuery, state: FSMContext) -> None:
     """
     A function that processes the returned data from the added photo in category naturals button in admin menu
     :param callback: aiogram.types.CallbackQuery
+    :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
     await callback.answer()
     await callback.message.delete_reply_markup()
-    await callback.message.answer(Text('Здесь будет добавление фотографий в категорию "Естественные"').as_markdown())
+    await state.set_state(FSMPhotoDownload.waitePhoto)
+    await state.update_data(bucket='naturals')
+    keyboard = Keyboard(1, '-photos').create_inline(lex_buttons.back)
+    await callback.message.answer(Text(lex_messages.addPhotoNaturals).as_markdown(), reply_markup=keyboard)
 
 
 @admin_router.callback_query(F.data == f'{lex_buttons.reviews.callback}-admin')
-async def admin_reviews_route(callback: CallbackQuery) -> None:
+async def admin_reviews_route(callback: CallbackQuery, state: FSMContext) -> None:
     """
     A function that processes the returned data from the added photo in category reviews button in admin menu
     :param callback: aiogram.types.CallbackQuery
+    :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
     await callback.answer()
     await callback.message.delete_reply_markup()
-    await callback.message.answer(Text('Здесь будет добавление фотографий в категорию "Отзывы"').as_markdown())
+    await state.set_state(FSMPhotoDownload.waitePhoto)
+    await state.update_data(bucket='reviews')
+    keyboard = Keyboard(1, '-photos').create_inline(lex_buttons.back)
+    await callback.message.answer(Text(lex_messages.addPhotoReviews).as_markdown(), reply_markup=keyboard)
 
 
 @admin_router.callback_query(F.data == f'{lex_buttons.bulks.callback}-admin')
-async def admin_reviews_route(callback: CallbackQuery) -> None:
+async def admin_reviews_route(callback: CallbackQuery, state: FSMContext) -> None:
     """
     A function that processes the returned data from the added photo in category bulks button in admin menu
     :param callback: aiogram.types.CallbackQuery
+    :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
     await callback.answer()
     await callback.message.delete_reply_markup()
-    await callback.message.answer(Text('Здесь будет добавление фотографий в категорию "Объемы"').as_markdown())
+    await state.set_state(FSMPhotoDownload.waitePhoto)
+    await state.update_data(bucket='bulks')
+    keyboard = Keyboard(1, '-photos').create_inline(lex_buttons.back)
+    await callback.message.answer(Text(lex_messages.addPhotoBulks).as_markdown(), reply_markup=keyboard)
+
+
+@admin_router.message(FSMPhotoDownload.waitePhoto)
+async def admin_download_photo_route(message: Message, state: FSMContext) -> None:
+    state_data = await state.get_data()
+    data = BytesIO()
+    keyboard = Keyboard(1, '-photos').create_inline(lex_buttons.back)
+    if message.photo:
+        await message.bot.download(file=message.photo[-1].file_id, destination=data)
+        filename = f'{message.photo[-1].file_id}.jpg'
+        file_size = message.photo[-1].file_size
+    elif message.document:
+        await message.bot.download(file=message.document.file_id, destination=data)
+        filename = f'{message.document.file_id}.jpg'
+        file_size = message.document.file_size
+    else:
+        await message.answer(Text(lex_messages.addPhotoNotPhoto, reply_markup=keyboard).as_markdown())
+        return
+    data.seek(0)
+    upload = await s3_client.upload(
+        state_data['bucket'],
+        filename,
+        data,
+        file_size
+    )
+    if upload.error:
+        logger.warning(upload.errorText)
+        await message.answer(Text(lex_messages.techProblems).as_markdown())
+        await state.clear()
+        await message.delete()
+        return
+    msg = await message.answer(Text(lex_messages.addedPhotoOk).as_markdown(), show_alert=True)
+    await message.delete()
+    asyncio.create_task(remove_message(msg.bot, message.chat.id, msg.message_id, 5.0))
 
 
 __all__ = 'admin_router'

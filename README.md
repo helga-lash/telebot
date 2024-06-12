@@ -27,6 +27,6 @@ Telegram bot
     ```
 * Очистить БД:
     ```bash
-    sudo rm -rf database/data/pgdata
+    sudo rm -rf database/data/pgdata; sudo rm -rf minio/data/*
     ```
 
