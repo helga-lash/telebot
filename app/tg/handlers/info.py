@@ -11,7 +11,7 @@ from pathlib import Path
 from tg.lexicon import lex_buttons, lex_messages
 from tg.keyboards import Keyboard
 from tg.helpers_functions import remove_message
-from configuration import logger
+from configuration import logger, apl_conf
 from s3_minio import s3_client
 
 info_router: Router = Router()
@@ -30,7 +30,8 @@ async def info_route(callback: CallbackQuery, state: FSMContext) -> None:
     logger.debug(f'The user with the ID={callback.from_user.id} clicked the info button')
     keyboard = Keyboard(3).create_inline(lex_buttons.works, lex_buttons.reviews, lex_buttons.contacts)
     await callback.message.delete_reply_markup()
-    await callback.message.answer(Text(lex_messages.info).as_markdown(), reply_markup=keyboard)
+    msg = await callback.message.answer(Text(lex_messages.info).as_markdown(), reply_markup=keyboard)
+    asyncio.create_task(remove_message(msg.bot, callback.message.chat.id, msg.message_id, 3600.0))
 
 
 @info_router.callback_query(F.data == lex_buttons.works.callback)
@@ -46,7 +47,8 @@ async def works_route(callback: CallbackQuery, state: FSMContext) -> None:
     logger.debug(f'The user with the ID={callback.from_user.id} clicked the works button')
     await callback.message.delete_reply_markup()
     keyboard = Keyboard(3).create_inline(lex_buttons.trends, lex_buttons.naturals, lex_buttons.bulks)
-    await callback.message.answer(Text(lex_messages.works).as_markdown(), reply_markup=keyboard)
+    msg = await callback.message.answer(Text(lex_messages.works).as_markdown(), reply_markup=keyboard)
+    asyncio.create_task(remove_message(msg.bot, callback.message.chat.id, msg.message_id, 3600.0))
 
 
 @info_router.callback_query(F.data == lex_buttons.trends.callback)
@@ -87,7 +89,7 @@ async def photos_route(callback: CallbackQuery, state: FSMContext) -> None:
         msg = await callback.message.answer_photo(FSInputFile(file_path.entity))
         Path(file_path.entity).unlink(missing_ok=True)
         asyncio.create_task(remove_message(msg.bot, callback.message.chat.id, msg.message_id, 3600.0))
-    await callback.message.answer('Здесь будут фотографии работ', reply_markup=keyboard)
+    await callback.message.answer(Text(lex_messages.photoShow).as_markdown(), reply_markup=keyboard)
 
 
 @info_router.callback_query(F.data == lex_buttons.contacts.callback)
@@ -101,7 +103,15 @@ async def contacts_route(callback: CallbackQuery) -> None:
     logger.debug(f'The user with the ID={callback.from_user.id} clicked the contacts button')
     await callback.message.delete_reply_markup()
     keyboard = Keyboard(2).create_inline(lex_buttons.record, lex_buttons.info)
-    await callback.message.answer('Здесь будут контакты', reply_markup=keyboard)
+    msg = await callback.message.answer(
+        Text(lex_messages.contactShow.format(
+            phone=apl_conf.tgBot.contacts.phone,
+            whatsapp=apl_conf.tgBot.contacts.whatsapp,
+            instagram=apl_conf.tgBot.contacts.instagram,
+            vk=apl_conf.tgBot.contacts.vk,
+        )).as_markdown(),
+        reply_markup=keyboard)
+    asyncio.create_task(remove_message(msg.bot, callback.message.chat.id, msg.message_id, 3600.0))
 
 
 __all__ = 'info_router'

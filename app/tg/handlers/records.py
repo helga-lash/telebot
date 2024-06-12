@@ -9,6 +9,7 @@ from datetime import date, time
 from tg.lexicon import lex_buttons, lex_messages, lex_commands
 from tg.keyboards import Keyboard, SimpleCalendar, SimpleCalendarCallback
 from tg.states import FSMRecord, FSMUser
+from tg.helpers_functions import admin_send_message
 from configuration import logger, apl_conf
 from database.functions import rec_day, user_by_id, create_user, create_registration
 
@@ -249,6 +250,16 @@ async def create_record_route(callback: CallbackQuery, state: FSMContext) -> Non
     else:
         await callback.message.answer(Text(lex_messages.recordOk.format(name=create.entity.user.name)).as_markdown())
     await state.set_state()
+    await admin_send_message(
+        callback.bot,
+        Text(lex_messages.adminRecordOkNotify.format(
+            date=create.entity.date.strftime("%d-%m-%Y"),
+            time=create.entity.time.strftime("%H:%M"),
+            name=create.entity.user.name,
+            surname=create.entity.user.surname,
+            phone=create.entity.user.phone_number
+        )).as_markdown()
+    )
 
 
 __all__ = 'records_router'
