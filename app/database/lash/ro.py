@@ -1,7 +1,7 @@
 from peewee_async import PooledPostgresqlDatabase, Manager
 from peewee import ForeignKeyField
 
-from database.lash.defaults import UsersDefault, RegistrationsDefault
+from database.lash.defaults import UsersDefault, RegistrationsDefault, SchedulerJobsDefault
 from configuration import pgs_conf
 
 db_pool: PooledPostgresqlDatabase = PooledPostgresqlDatabase(
@@ -35,7 +35,7 @@ class RegistrationsRO(RegistrationsDefault):
             foreign key to users table
     """
     user_id = ForeignKeyField(UsersRO, field='tg_id', backref='registrations_user_fk', column_name='user_id',
-                              on_delete='restrict', on_update='cascade')
+                              on_delete='restrict', on_update='cascade', null=False)
 
     class Meta:
         schema = 'lash'
@@ -43,8 +43,30 @@ class RegistrationsRO(RegistrationsDefault):
         database = db_pool
 
 
+class SchedulerJobsRO(SchedulerJobsDefault):
+    """
+    The class that describes the connection to the table read-only scheduler_jobs
+
+    Attributes:
+        user_id: peewee.ForeignKeyField
+            foreign key to users table. It links to the 'tg_id' field in the UsersRO table.
+            It creates a backreference 'scheduler_jobs_user_fk' in the UsersRO table.
+            The column name in the database for this field is 'user_id'.
+            On delete, it will restrict the action.
+            On update, it will cascade the action.
+    """
+    user_id = ForeignKeyField(UsersRO, field='tg_id', backref='scheduler_jobs_user_fk', column_name='user_id',
+                              on_delete='restrict', on_update='cascade', null=False)
+
+    class Meta:
+        schema = 'lash'
+        table_name = 'scheduler_jobs'
+        database = db_pool
+
+
 __all__ = (
     'UsersRO',
     'RegistrationsRO',
+    'SchedulerJobsRO',
     'objects_ro'
 )

@@ -4,14 +4,15 @@ from aiogram.fsm.context import FSMContext
 from aiogram import F
 from aiogram.utils.formatting import Text
 
-from datetime import date, time
+from datetime import date, time, datetime, timedelta
 
 from tg.lexicon import lex_buttons, lex_messages, lex_commands
 from tg.keyboards import Keyboard, SimpleCalendar, SimpleCalendarCallback
 from tg.states import FSMRecord, FSMUser
-from tg.helpers_functions import send_message
 from configuration import logger, apl_conf
 from database.functions import rec_day, user_by_id, create_user, create_registration
+from database.entities.scheduler_jobs.work_class import SchedulerJobType, SchedulerJob
+from database import create_job
 
 records_router: Router = Router()
 
@@ -249,19 +250,72 @@ async def create_record_route(callback: CallbackQuery, state: FSMContext) -> Non
         await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
     else:
         await callback.message.answer(Text(lex_messages.recordOk.format(name=create.entity.user.name)).as_markdown())
-    await state.set_state()
-    for admin in apl_conf.tgBot.admins:
-        await send_message(
-            callback.bot,
-            admin,
-            Text(lex_messages.adminRecordOkNotify.format(
-                date=create.entity.date.strftime("%d-%m-%Y"),
-                time=create.entity.time.strftime("%H:%M"),
-                name=create.entity.user.name,
-                surname=create.entity.user.surname,
-                phone=create.entity.user.phone_number
-            )).as_markdown()
+        job_two_hours_confirm = await create_job(
+            callback.from_user.id,
+            SchedulerJob(
+                type=SchedulerJobType.SEND_MESSAGE,
+                chat_id=callback.from_user.id,
+                text=Text(lex_messages.confirmationDay.format(
+                    date=create.entity.date.strftime("%d-%m-%Y"),
+                    time=create.entity.time.strftime("%H:%M"),
+                    name=create.entity.user.name
+                )).as_markdown(),
+                keyboard=Keyboard(
+                    2, f'-confirmation_two_hours:{create.entity.id}'
+                ).create_inline(lex_buttons.yes, lex_buttons.no)
+            ),
+            datetime(
+                data['date'].year, data['date'].month, data['date'].day,
+                data['time'].hour, data['time'].minute, data['time'].second
+            ) - timedelta(hours=2)
         )
+        if job_two_hours_confirm.error:
+            logger.warning(job_two_hours_confirm.errorText)
+            await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
+            await state.clear()
+        job_day_confirm = await create_job(
+            callback.from_user.id,
+            SchedulerJob(
+                type=SchedulerJobType.SEND_MESSAGE,
+                chat_id=callback.from_user.id,
+                text=Text(lex_messages.confirmationDay.format(
+                    date=create.entity.date.strftime("%d-%m-%Y"),
+                    time=create.entity.time.strftime("%H:%M"),
+                    name=create.entity.user.name
+                )).as_markdown(),
+                keyboard=Keyboard(
+                    2, f'-confirmation_day:{create.entity.id}'
+                ).create_inline(lex_buttons.yes, lex_buttons.no)
+            ),
+            datetime(
+                data['date'].year, data['date'].month, data['date'].day,
+                data['time'].hour, data['time'].minute, data['time'].second
+            ) - timedelta(days=1)
+        )
+        if job_day_confirm.error:
+            logger.warning(job_day_confirm.errorText)
+            await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
+            await state.clear()
+        for admin in apl_conf.tgBot.admins:
+            job = await create_job(
+                admin,
+                SchedulerJob(
+                    type=SchedulerJobType.SEND_MESSAGE,
+                    chat_id=int(admin),
+                    text=Text(lex_messages.adminRecordOkNotify.format(
+                        date=create.entity.date.strftime("%d-%m-%Y"),
+                        time=create.entity.time.strftime("%H:%M"),
+                        name=create.entity.user.name,
+                        surname=create.entity.user.surname,
+                        phone=create.entity.user.phone_number
+                    )).as_markdown()
+                ),
+                datetime.now()
+            )
+            if job.error:
+                logger.warning(job.errorText)
+                await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
+    await state.clear()
 
 
 __all__ = 'records_router'

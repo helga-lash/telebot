@@ -1,20 +1,19 @@
-import asyncio
-
 from aiogram.dispatcher.router import Router
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram import F
 from aiogram.utils.formatting import Text
-from datetime import date, time
+from datetime import date, time, datetime, timedelta
 from io import BytesIO
 
 from configuration import logger, apl_conf
 from tg.lexicon import lex_buttons, lex_messages
 from tg.keyboards import Keyboard, AdminCalendar, AdminCalendarCallback, RecordsKeyboard, RecordCallback
 from tg.states import FSMUser, FSMRecordNotes, FSMRecordReservation, FSMPhotoDownload
-from tg.helpers_functions import remove_message
 from database import rec_day, record_update_notes, create_registration
 from s3_minio import s3_client
+from database.entities.scheduler_jobs.work_class import SchedulerJobType, SchedulerJob
+from database import create_job
 
 admin_router = Router()
 
@@ -397,7 +396,19 @@ async def admin_download_photo_route(message: Message, state: FSMContext) -> Non
         return
     msg = await message.answer(Text(lex_messages.addedPhotoOk).as_markdown(), show_alert=True)
     await message.delete()
-    asyncio.create_task(remove_message(msg.bot, message.chat.id, msg.message_id, 5.0))
+    job = await create_job(
+        message.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=message.chat.id,
+            message_id=msg.message_id
+        ),
+        datetime.now() + timedelta(seconds=5)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await message.answer(Text(lex_messages.techProblems).as_markdown())
+        await state.clear()
 
 
 __all__ = 'admin_router'

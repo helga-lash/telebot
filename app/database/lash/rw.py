@@ -1,7 +1,7 @@
 from peewee_async import PooledPostgresqlDatabase, Manager
 from peewee import ForeignKeyField
 
-from database.lash.defaults import UsersDefault, RegistrationsDefault
+from database.lash.defaults import UsersDefault, RegistrationsDefault, SchedulerJobsDefault
 from configuration import pgs_conf
 
 db_pool: PooledPostgresqlDatabase = PooledPostgresqlDatabase(
@@ -43,8 +43,26 @@ class RegistrationsRW(RegistrationsDefault):
         database = db_pool
 
 
+class SchedulerJobsRW(SchedulerJobsDefault):
+    """
+    The class that describes the connection to the table write-only scheduler_jobs.
+
+    Attributes:
+        user_id: peewee.ForeignKeyField
+            foreign key to users table. It links the scheduler_jobs to a specific user.
+    """
+    user_id = ForeignKeyField(UsersRW, field='tg_id', backref='scheduler_jobs_user_fk', column_name='user_id',
+                              on_delete='restrict', on_update='cascade')
+
+    class Meta:
+        schema = 'lash'
+        table_name = 'scheduler_jobs'
+        database = db_pool
+
+
 __all__ = (
     'UsersRW',
     'RegistrationsRW',
+    'SchedulerJobsRW',
     'objects_rw'
 )

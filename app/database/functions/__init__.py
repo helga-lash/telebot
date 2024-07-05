@@ -2,6 +2,7 @@ from database.functions.registrations import (num_rec_day, rec_day, create_regis
                                               record_update_notes, select_confirmation, lock_reg_row,
                                               update_confirmation, delete_record)
 from database.functions.users import user_by_id, create_user
+from database.functions.scheduler_jobs import create_job, update_job, delete_jobs, select_jobs_for_work
 
 
 __all__ = (
@@ -15,5 +16,9 @@ __all__ = (
     'select_confirmation',
     'lock_reg_row',
     'update_confirmation',
-    'delete_record'
+    'delete_record',
+    'create_job',
+    'update_job',
+    'delete_jobs',
+    'select_jobs_for_work'
 )
