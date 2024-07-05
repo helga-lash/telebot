@@ -1,5 +1,6 @@
 from database.functions.registrations import (num_rec_day, rec_day, create_registration, record_by_id,
-                                              record_update_notes)
+                                              record_update_notes, select_confirmation, lock_reg_row,
+                                              update_confirmation, delete_record)
 from database.functions.users import user_by_id, create_user
 
 
@@ -10,5 +11,9 @@ __all__ = (
     'create_user',
     'create_registration',
     'record_by_id',
-    'record_update_notes'
+    'record_update_notes',
+    'select_confirmation',
+    'lock_reg_row',
+    'update_confirmation',
+    'delete_record'
 )

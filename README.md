@@ -8,13 +8,13 @@ Telegram bot
     git submodule init
     git submodule update
     ```
-* Подтянуть изменения из репозитория:
-    ```bash
-    cd helpers_entity/
-    git fetch
-    git merge origin/main
-    cd ../
-    ```
+  * Подтянуть изменения из репозитория:
+      ```bash
+      cd helpers_entity/
+      git fetch
+      git merge origin/main
+      cd ../
+      ```
 
 ## Dev окружение:
 * Запуск:
