@@ -9,7 +9,8 @@ from scheduler import schedule
 
 async def main():
     tg: TelegramInterface = TelegramInterface()
-    asyncio.create_task(schedule(tg.bot))
-    await tg.run()
+    bot_task = tg.run()
+    scheduler_task = asyncio.create_task(schedule(tg.bot))
+    await asyncio.gather(bot_task, scheduler_task)
 
 asyncio.run(main())

@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram.dispatcher.router import Router
 from aiogram.types import CallbackQuery, FSInputFile
 from aiogram import F
@@ -7,12 +5,14 @@ from aiogram.utils.formatting import Text
 from aiogram.fsm.context import FSMContext
 from random import randint
 from pathlib import Path
+from datetime import datetime, timedelta
 
 from tg.lexicon import lex_buttons, lex_messages
 from tg.keyboards import Keyboard
-from tg.helpers_functions import remove_message
 from configuration import logger, apl_conf
 from s3_minio import s3_client
+from database.entities.scheduler_jobs.work_class import SchedulerJobType, SchedulerJob
+from database import create_job
 
 info_router: Router = Router()
 
@@ -31,7 +31,19 @@ async def info_route(callback: CallbackQuery, state: FSMContext) -> None:
     keyboard = Keyboard(3).create_inline(lex_buttons.works, lex_buttons.reviews, lex_buttons.contacts)
     await callback.message.delete_reply_markup()
     msg = await callback.message.answer(Text(lex_messages.info).as_markdown(), reply_markup=keyboard)
-    asyncio.create_task(remove_message(msg.bot, callback.message.chat.id, msg.message_id, 3600.0))
+    job = await create_job(
+        callback.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=callback.message.chat.id,
+            message_id=msg.message_id
+        ),
+        datetime.now() + timedelta(hours=1)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
+        await state.clear()
 
 
 @info_router.callback_query(F.data == lex_buttons.works.callback)
@@ -48,7 +60,19 @@ async def works_route(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.delete_reply_markup()
     keyboard = Keyboard(3).create_inline(lex_buttons.trends, lex_buttons.naturals, lex_buttons.bulks)
     msg = await callback.message.answer(Text(lex_messages.works).as_markdown(), reply_markup=keyboard)
-    asyncio.create_task(remove_message(msg.bot, callback.message.chat.id, msg.message_id, 3600.0))
+    job = await create_job(
+        callback.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=callback.message.chat.id,
+            message_id=msg.message_id
+        ),
+        datetime.now() + timedelta(hours=1)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
+        await state.clear()
 
 
 @info_router.callback_query(F.data == lex_buttons.trends.callback)
@@ -88,7 +112,20 @@ async def photos_route(callback: CallbackQuery, state: FSMContext) -> None:
             return
         msg = await callback.message.answer_photo(FSInputFile(file_path.entity))
         Path(file_path.entity).unlink(missing_ok=True)
-        asyncio.create_task(remove_message(msg.bot, callback.message.chat.id, msg.message_id, 3600.0))
+        job = await create_job(
+            callback.from_user.id,
+            SchedulerJob(
+                type=SchedulerJobType.REMOVE_MESSAGE,
+                chat_id=callback.message.chat.id,
+                message_id=msg.message_id
+            ),
+            datetime.now() + timedelta(hours=1)
+        )
+        if job.error:
+            logger.warning(job.errorText)
+            await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
+            await state.clear()
+            return
     await callback.message.answer(Text(lex_messages.photoShow).as_markdown(), reply_markup=keyboard)
 
 
@@ -111,7 +148,18 @@ async def contacts_route(callback: CallbackQuery) -> None:
             vk=apl_conf.tgBot.contacts.vk,
         )).as_markdown(),
         reply_markup=keyboard)
-    asyncio.create_task(remove_message(msg.bot, callback.message.chat.id, msg.message_id, 3600.0))
+    job = await create_job(
+        callback.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=callback.message.chat.id,
+            message_id=msg.message_id
+        ),
+        datetime.now() + timedelta(hours=1)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
 
 
 __all__ = 'info_router'

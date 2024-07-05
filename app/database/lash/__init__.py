@@ -1,5 +1,5 @@
-from database.lash.ro import objects_ro, UsersRO, RegistrationsRO
-from database.lash.rw import objects_rw, UsersRW, RegistrationsRW
+from database.lash.ro import objects_ro, UsersRO, RegistrationsRO, SchedulerJobsRO
+from database.lash.rw import objects_rw, UsersRW, RegistrationsRW, SchedulerJobsRW
 
 
 __all__ = (
@@ -8,5 +8,7 @@ __all__ = (
     'UsersRO',
     'UsersRW',
     'RegistrationsRO',
-    'RegistrationsRW'
+    'RegistrationsRW',
+    'SchedulerJobsRO',
+    'SchedulerJobsRW'
 )

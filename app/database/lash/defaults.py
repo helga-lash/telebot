@@ -1,5 +1,7 @@
-from peewee import Model, CharField, TextField, UUIDField, DateField, TimeField, BooleanField
+from peewee import Model, CharField, TextField, UUIDField, DateField, TimeField, BooleanField, DateTimeField
+from playhouse.postgres_ext import JSONField
 from uuid import uuid4
+from datetime import datetime
 
 
 class UsersDefault(Model):
@@ -51,3 +53,32 @@ class RegistrationsDefault(Model):
     confirmation_two_hours = BooleanField(column_name='confirmation_two_hours', null=False, default=False)
     lock = BooleanField(column_name='lock', null=False, default=False)
     notes = TextField(column_name='notes')
+
+
+class SchedulerJobsDefault(Model):
+    """
+    A class representing a job in the scheduler.
+
+    Attributes:
+        id : UUIDField
+            The unique identifier for the job.
+        execute_time : DateTimeField
+            The time when the job should be executed.
+        data : JSONField
+            The data associated with the job.
+        created_at : DateTimeField
+            The time when the job was created.
+        updated_at : DateTimeField
+            The time when the job was last updated.
+        lock : BooleanField
+            A flag indicating whether the job is locked.
+        done : BooleanField
+            A flag indicating whether the job is done.
+    """
+    id = UUIDField(column_name='id', unique=True, primary_key=True, default=lambda: uuid4())
+    execute_time = DateTimeField(column_name='execute_time', null=False)
+    data = JSONField(column_name='data', null=False)
+    created_at = DateTimeField(column_name='created_at', null=False, default=lambda: datetime.now())
+    updated_at = DateTimeField(column_name='updated_at', null=False, default=lambda: datetime.now())
+    lock = BooleanField(column_name='lock', null=False, default=False)
+    done = BooleanField(column_name='done', null=False, default=False)
