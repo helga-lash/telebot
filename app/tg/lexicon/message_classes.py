@@ -117,3 +117,7 @@ class Messages:
                                 'Имя: {name}\n'
                                 'Фамилия: {surname}\n'
                                 'Телефон: {phone}')
+    confirmationDay: str = ('{name}, Вы записаны на процедуру {date} в {time}.\n'
+                            'Для подтверждения записи нажмите "Да", для отмены записи нажмите "Нет".')
+    adminConfirmation: str = '{name} {surname} подтвердил запись на {date} в {time}.'
+    adminRecordDelete: str = '{name} {surname} отменил запись на {date} в {time}.'

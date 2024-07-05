@@ -1,21 +1,21 @@
-from peewee import DoesNotExist
 from uuid import UUID
 
 from configuration import logger
 from helpers.work_classes import ReturnEntity
 from database.entities import RegistrationRecord, UserRecord
-from database.lash import objects_ro, RegistrationsRO
+from database.lash import objects_rw, RegistrationsRW
 
 
-async def record_by_id(record_id: UUID) -> ReturnEntity:
-    """
-    Method to get the record by id
-    :param record_id: uuid of record
-    :return: ReturnEntity where entity is RegistrationRecord or None
-    """
+async def update_confirmation(record_id: UUID, per_day: bool) -> ReturnEntity:
     result: ReturnEntity = ReturnEntity(error=True)
     try:
-        record = await objects_ro.get(RegistrationsRO, id=record_id)
+        record = await objects_rw.get(RegistrationsRW, id=record_id)
+        record.lock = False
+        if per_day:
+            record.confirmation_day = True
+        else:
+            record.confirmation_two_hours = True
+        await objects_rw.update(record)
         result.entity = RegistrationRecord(
             id=record.id,
             date=record.date,
@@ -33,14 +33,10 @@ async def record_by_id(record_id: UUID) -> ReturnEntity:
             notes=record.notes
         )
         result.error = False
-        logger.debug(f'Found record with ID={record_id}')
-    except DoesNotExist:
-        logger.debug(f'Record with ID={record_id} not found in database')
-        result.error_text_append(f'Record with ID={record_id} not found in database')
     except Exception as error:
         logger.warning(error)
         result.error_text_append('Database access error')
     return result
 
 
-__all__ = 'record_by_id'
+__all__ = 'update_confirmation'

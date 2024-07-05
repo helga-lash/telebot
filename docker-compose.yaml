@@ -1,7 +1,7 @@
 services:
 
   database:
-    image: postgres:16.3-alpine3.19
+    image: postgres:16.3-alpine3.20
     container_name: postgres
     shm_size: 1024mb
     healthcheck:
@@ -50,7 +50,7 @@ services:
         condition: service_healthy
 
   s3:
-    image: quay.io/minio/minio:RELEASE.2024-05-28T17-19-04Z
+    image: quay.io/minio/minio:RELEASE.2024-07-04T14-25-45Z
     container_name: minio
     healthcheck:
       test: [ "CMD", "mc", "ready", "local" ]

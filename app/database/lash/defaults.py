@@ -49,4 +49,5 @@ class RegistrationsDefault(Model):
     time = TimeField(column_name='time', null=False)
     confirmation_day = BooleanField(column_name='confirmation_day', null=False, default=False)
     confirmation_two_hours = BooleanField(column_name='confirmation_two_hours', null=False, default=False)
+    lock = BooleanField(column_name='lock', null=False, default=False)
     notes = TextField(column_name='notes')
