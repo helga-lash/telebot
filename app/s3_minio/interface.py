@@ -1,6 +1,5 @@
 from miniopy_async import Minio
 from io import BytesIO
-from datetime import timedelta
 
 from configuration import logger, mn_conf, apl_conf
 from helpers.work_classes import MinioClientConf, ReturnEntity

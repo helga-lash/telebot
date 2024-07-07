@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from database.entities.scheduler_jobs.work_class import SchedulerJob
 from database.lash import objects_rw, SchedulerJobsRW
 from database.entities import SchedulerJobsRecord, UserRecord, SchedulerJob
 from helpers.work_classes import ReturnEntity

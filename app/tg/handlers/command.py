@@ -9,16 +9,18 @@ from configuration import logger, apl_conf
 from database.functions import user_by_id
 from tg.lexicon import lex_commands, lex_buttons, lex_messages
 from tg.keyboards import Keyboard
+from tg.states import FSMUser
 
 
 command_router: Router = Router()
 
 
 @command_router.message(CommandStart(), StateFilter(default_state))
-async def process_start_command(message: Message) -> None:
+async def process_start_command(message: Message, state: FSMContext) -> None:
     """
     Function processing the start command
     :param message: aiogram.types.Message
+    :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
     logger.debug(f'The user with ID={message.from_user.id} selected the start command')
@@ -26,22 +28,25 @@ async def process_start_command(message: Message) -> None:
     if user.error:
         logger.warning(user.errorText)
         await message.answer(Text(lex_messages.techProblems).as_markdown())
-    else:
-        if str(message.from_user.id) not in apl_conf.tgBot.admins:
-            keyboard = Keyboard(2).create_inline(lex_buttons.record, lex_buttons.info)
-            if user.entity is None:
-                await message.answer(Text(lex_commands.start.msg.format(name='')).as_markdown(), reply_markup=keyboard)
-            else:
-                await message.answer(Text(lex_commands.start.msg.format(name=f', {user.entity.name}')).as_markdown(),
-                                     reply_markup=keyboard)
+        return
+    if str(message.from_user.id) not in apl_conf.tgBot.admins:
+        if user.entity is None:
+            keyboard = Keyboard(1, '-registration').create_inline(lex_buttons.no)
+            await state.update_data(admin=False)
+            await message.answer(Text(lex_messages.userNameFirst).as_markdown(), reply_markup=keyboard)
+            await state.set_state(FSMUser.name)
         else:
-            if user.entity is None:
-                keyboard = Keyboard(1, '-adminReg').create_inline(lex_buttons.yes)
-                await message.answer(Text(lex_messages.admNotRegistered).as_markdown(), reply_markup=keyboard)
-            else:
-                keyboard = Keyboard(2, '-admin').create_inline(lex_buttons.record, lex_buttons.info)
-                await message.answer(Text(lex_commands.start.msg.format(name=f', {user.entity.name}')).as_markdown(),
-                                     reply_markup=keyboard)
+            keyboard = Keyboard(2).create_inline(lex_buttons.record, lex_buttons.info)
+            await message.answer(Text(lex_commands.start.msg.format(name=f', {user.entity.name}')).as_markdown(),
+                                 reply_markup=keyboard)
+    else:
+        if user.entity is None:
+            keyboard = Keyboard(1, '-adminReg').create_inline(lex_buttons.yes)
+            await message.answer(Text(lex_messages.admNotRegistered).as_markdown(), reply_markup=keyboard)
+        else:
+            keyboard = Keyboard(2, '-admin').create_inline(lex_buttons.record, lex_buttons.info)
+            await message.answer(Text(lex_commands.start.msg.format(name=f', {user.entity.name}')).as_markdown(),
+                                 reply_markup=keyboard)
 
 
 @command_router.message(Command(commands=lex_commands.help.command), StateFilter(default_state))

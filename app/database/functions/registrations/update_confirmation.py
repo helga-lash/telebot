@@ -10,7 +10,6 @@ async def update_confirmation(record_id: UUID, per_day: bool) -> ReturnEntity:
     result: ReturnEntity = ReturnEntity(error=True)
     try:
         record = await objects_rw.get(RegistrationsRW, id=record_id)
-        record.lock = False
         if per_day:
             record.confirmation_day = True
         else:
@@ -29,7 +28,6 @@ async def update_confirmation(record_id: UUID, per_day: bool) -> ReturnEntity:
             ),
             confirmation_day=record.confirmation_day,
             confirmation_two_hours=record.confirmation_two_hours,
-            lock=record.lock,
             notes=record.notes
         )
         result.error = False

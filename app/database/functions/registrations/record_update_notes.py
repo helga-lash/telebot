@@ -32,7 +32,6 @@ async def record_update_notes(record_id: UUID, notes: str = None) -> ReturnEntit
             ),
             confirmation_day=record.confirmation_day,
             confirmation_two_hours=record.confirmation_two_hours,
-            lock=record.lock,
             notes=record.notes
         )
         result.error = False

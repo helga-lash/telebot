@@ -31,9 +31,10 @@ async def schedule(bot: Bot) -> None:
                     await bot.send_message(chat_id=record.data.chat_id, text=record.data.text,
                                            reply_markup=record.data.keyboard)
                 case _:
-                    logger.warning(f'Unknown job type {record.data.type}')
-            unlock = await update_job(record.id, False)
-            if unlock.error:
+                    logger.warning(f'Unknown job type {record.data.type}, record ID={record.id}')
+                    continue
+            done = await update_job(record.id, False)
+            if done.error:
                 logger.warning(f'Unable to unlock record ID={record.id}')
 
 

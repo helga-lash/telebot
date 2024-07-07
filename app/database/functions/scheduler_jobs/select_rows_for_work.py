@@ -13,7 +13,7 @@ async def select_jobs_for_work() -> ReturnEntity:
     try:
         records = await objects_ro.execute(
             SchedulerJobsRO.select().where(
-                ((SchedulerJobsRO.execute_time >= from_time) | (SchedulerJobsRO.execute_time <= to_time)) &
+                ((SchedulerJobsRO.execute_time >= from_time) & (SchedulerJobsRO.execute_time < to_time)) &
                 ~SchedulerJobsRO.lock & ~SchedulerJobsRO.done
             ))
         result.entity = [
