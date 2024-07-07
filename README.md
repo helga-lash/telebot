@@ -35,3 +35,8 @@ Telegram bot
     ```bash
     docker compose -f docker-compose.yaml -f composes/release.yaml down -v
     ```
+  
+## Сборка контейнера:
+```shell
+docker build . --target prod --tag registry.xoma-net/lash_telebot:v0.1.0
+```
