@@ -1,0 +1,67 @@
+services:
+
+  database:
+    volumes:
+      - postgres_data_release:/var/lib/postgresql/data
+
+  s3:
+    volumes:
+      - minio_data_release:/data
+
+  telebot:
+    image: registry.xoma-net/lash_telebot:v0.1.0
+    container_name: telebot
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    environment:
+      TZ: Europe/Moscow
+      CFG_PTH: /conf/prod.yaml
+      DB_NAME: lash
+      DB_RW_HOST: postgres
+      DB_RW_PORT: 5432
+      DB_RW_USER: rw_user
+      DB_RW_PAS: rwPassword
+      DB_RW_CON: 10
+      DB_RO_HOST: postgres
+      DB_RO_PORT: 5432
+      DB_RO_USER: ro_user
+      DB_RO_PAS: roPassword
+      DB_RO_CON: 10
+      MN_HOST: minio
+      MN_PORT: 9000
+      MN_REGION: ru-krasnodar-kropotkin
+      MN_ACCESS_KEY: testUser
+      MN_SECRET_KEY: testPassword
+      TG_TOKEN: 6870999386:AAGccloydrBobPuFvzjrMWYKkLpMRSzxy3I
+      TG_ADMINS: 972102598
+      TG_RD_TM: "11:30:00, 15:00, 18:00:00"
+      TG_RD_MT: 2
+      TG_PHOTO_PATH: /tmp/photo
+      TG_CON_PHONE: "+78005553535"
+      TG_CON_WHATSAPP: https://wa.me/78005553535
+      TG_CON_INSTAGRAM: https://www.instagram.com/example
+      TG_CON_VK: https://vk.com/example
+    depends_on:
+      database:
+        condition: service_healthy
+      s3:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+
+volumes:
+  postgres_data_release:
+    driver: local
+  minio_data_release:
+    driver: local
+
+networks:
+  default:
+    name: telebot-release
