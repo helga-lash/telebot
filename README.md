@@ -25,8 +25,13 @@ Telegram bot
     ```bash
     docker compose -f docker-compose.yaml -f composes/dev.yaml down -v
     ```
-* Очистить БД:
-    ```bash
-    sudo rm -rf database/data/pgdata; sudo rm -rf minio/data/*
-    ```
 
+## Тестирование релиза:
+* Запуск:
+    ```bash
+    docker compose -f docker-compose.yaml -f composes/release.yaml up -d
+    ```
+* Остановка:
+    ```bash
+    docker compose -f docker-compose.yaml -f composes/release.yaml down -v
+    ```

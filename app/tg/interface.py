@@ -47,4 +47,4 @@ class TelegramInterface:
         self.dispatcher.include_router(confirmation_router)
         self.dispatcher.include_router(not_match_router)
         await self.bot.delete_webhook(drop_pending_updates=True)
-        await self.dispatcher.start_polling(self.bot)
+        await self.dispatcher.start_polling(self.bot, handle_signals=False)

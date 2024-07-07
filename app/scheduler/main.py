@@ -2,14 +2,15 @@ import asyncio
 
 from aiogram import Bot
 
-from configuration import logger
+from configuration import logger, apl_conf
 from database import update_job, delete_jobs, select_jobs_for_work
 from database.entities.scheduler_jobs.work_class import SchedulerJobType
+from database.lash import objects_ro, objects_rw
 
 
 async def schedule(bot: Bot) -> None:
-    while True:
-        await asyncio.sleep(60)
+    while apl_conf.run:
+        await asyncio.sleep(30)
         del_rows = await delete_jobs()
         if del_rows.error:
             logger.warning('Unable to delete old jobs')
@@ -36,6 +37,9 @@ async def schedule(bot: Bot) -> None:
             done = await update_job(record.id, False)
             if done.error:
                 logger.warning(f'Unable to unlock record ID={record.id}')
+    await objects_rw.close()
+    await objects_ro.close()
+    logger.info("Closed database connections")
 
 
 __all__ = 'schedule'

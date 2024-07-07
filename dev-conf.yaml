@@ -41,7 +41,7 @@ app:
     recordMonth: 2
     photoPath: /tmp/lash-photo
     contacts:
-      phone: +78005553535
+      phone: '+78005553535'
       whatsapp: https://wa.me/78005553535
       instagram: https://www.instagram.com/example
       vk: https://vk.com/example

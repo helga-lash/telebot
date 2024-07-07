@@ -26,7 +26,6 @@ services:
       POSTGRES_HOST_AUTH_METHOD: md5
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./database/data:/var/lib/postgresql/data
       - ./database/postgres.conf:/etc/postgresql/postgresql.conf
       - ./database/initdb:/docker-entrypoint-initdb.d
     command:
@@ -74,7 +73,5 @@ services:
       MINIO_VOLUMES: /data
       MINIO_CONSOLE_ADDRESS: :9001
       MINIO_REGION: ru-krasnodar-kropotkin
-    volumes:
-      - ./minio/data:/data
     command:
       - 'server'
