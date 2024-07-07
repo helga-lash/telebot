@@ -29,7 +29,6 @@ async def record_by_id(record_id: UUID) -> ReturnEntity:
             ),
             confirmation_day=record.confirmation_day,
             confirmation_two_hours=record.confirmation_two_hours,
-            lock=record.lock,
             notes=record.notes
         )
         result.error = False

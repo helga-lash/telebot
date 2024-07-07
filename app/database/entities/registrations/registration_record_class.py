@@ -25,5 +25,4 @@ class RegistrationRecord:
     user: UserRecord
     confirmation_day: bool
     confirmation_two_hours: bool
-    lock: bool
     notes: str = None

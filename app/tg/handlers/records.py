@@ -216,7 +216,8 @@ async def create_user_route(callback: CallbackQuery, state: FSMContext) -> None:
         await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
         await state.clear()
     else:
-        if str(callback.from_user.id) not in apl_conf.tgBot.admins:
+        if ((str(callback.from_user.id) not in apl_conf.tgBot.admins) and
+                (data.get('date') is not None) and (data.get('time') is not None)):
             await state.update_data(user=create.entity.tg_id)
             await state.set_state(FSMRecord.confirmation)
             keyboard = Keyboard(2, '-record').create_inline(lex_buttons.yes, lex_buttons.no)

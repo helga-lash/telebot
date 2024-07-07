@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from database.lash import objects_rw, SchedulerJobsRW
-from database.entities import SchedulerJobsRecord, UserRecord,SchedulerJob
+from database.entities import SchedulerJobsRecord, UserRecord, SchedulerJob
 from helpers.work_classes import ReturnEntity
 from configuration import logger
 
@@ -11,7 +11,6 @@ async def update_job(record_id: UUID, lock: bool) -> ReturnEntity:
     result: ReturnEntity = ReturnEntity(error=True)
     try:
         record = await objects_rw.get(SchedulerJobsRW, id=record_id)
-        record.lock = False
         if lock:
             record.lock = True
         else:

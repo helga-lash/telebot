@@ -24,7 +24,6 @@ async def delete_record(record_id: UUID) -> ReturnEntity:
             ),
             confirmation_day=record.confirmation_day,
             confirmation_two_hours=record.confirmation_two_hours,
-            lock=record.lock,
             notes=record.notes
         )
         result.error = False

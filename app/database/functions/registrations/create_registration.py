@@ -34,7 +34,6 @@ async def create_registration(dt: date, tm: time, user_id: int) -> ReturnEntity:
                 notes=record.user_id.notes
                 ),
             confirmation_day=record.confirmation_day,
-            lock=record.lock,
             confirmation_two_hours=record.confirmation_two_hours
         )
         result.error = False

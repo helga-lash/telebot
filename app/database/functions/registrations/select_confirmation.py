@@ -50,7 +50,6 @@ async def select_confirmation(rec_date: date, rec_time: time, per_day: bool) -> 
             ),
             confirmation_day=record.confirmation_day,
             confirmation_two_hours=record.confirmation_two_hours,
-            lock=record.lock,
             notes=record.notes
         ) for record in records]
         result.error = False
