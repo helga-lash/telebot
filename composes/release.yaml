@@ -9,7 +9,7 @@ services:
       - minio_data_release:/data
 
   telebot:
-    image: registry.xoma-net/lash_telebot:v0.1.0
+    image: registry.xoma-net/lash_telebot:v0.1.1
     container_name: telebot
     restart: always
     deploy:

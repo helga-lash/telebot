@@ -1,3 +1,5 @@
+import re
+
 from aiogram.dispatcher.router import Router
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
@@ -80,7 +82,11 @@ async def process_simple_calendar_route(callback: CallbackQuery,
                     await state.update_data(date=day)
                     buttons = []
                     for tm in apl_conf.tgBot.recordTime:
-                        if tm not in [x.time for x in records.entity]:
+                        if (
+                                tm not in [x.time for x in records.entity]
+                        ) and (
+                                tm > time(datetime.now().hour, datetime.now().minute, datetime.now().second)
+                        ):
                             buttons.append(f'{str(tm).split(':')[0]}:{str(tm).split(':')[1]}')
                     keyboard = Keyboard(3).create_inline(*buttons)
                     await callback.message.answer(Text(lex_messages.recordTime).as_markdown(), reply_markup=keyboard)
@@ -111,8 +117,8 @@ async def record_time_route(callback: CallbackQuery, state: FSMContext) -> None:
             keyboard = Keyboard(2, '-record').create_inline(lex_buttons.yes, lex_buttons.no)
             await callback.message.answer(
                 Text(lex_messages.recordConfirm.format(
-                    day=data['date'],
-                    tm=data['time']
+                    day=data['date'].strftime("%d-%m-%Y"),
+                    tm=data['time'].strftime("%H:%M")
                 )).as_markdown(),
                 reply_markup=keyboard
             )
@@ -146,9 +152,12 @@ async def username_route(message: Message, state: FSMContext) -> None:
     :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
-    await state.update_data(name=message.text)
-    await state.set_state(FSMUser.surname)
-    await message.answer(Text(lex_messages.userSurname).as_markdown())
+    if re.compile(r'^[А-Я][а-я]{1,9}$').match(message.text):
+        await state.update_data(name=message.text)
+        await state.set_state(FSMUser.surname)
+        await message.answer(Text(lex_messages.userSurname).as_markdown())
+    else:
+        await message.answer(Text(lex_messages.userNameNotValid).as_markdown())
 
 
 @records_router.message(FSMUser.surname)
@@ -159,9 +168,12 @@ async def user_surname_route(message: Message, state: FSMContext) -> None:
     :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
-    await state.update_data(surname=message.text)
-    await state.set_state(FSMUser.phone_number)
-    await message.answer(Text(lex_messages.userPhone).as_markdown())
+    if re.compile(r'^[А-Я][а-я]{1,9}$').match(message.text):
+        await state.update_data(surname=message.text)
+        await state.set_state(FSMUser.phone_number)
+        await message.answer(Text(lex_messages.userPhone).as_markdown())
+    else:
+        await message.answer(Text(lex_messages.userSurnameNotValid).as_markdown())
 
 
 @records_router.message(FSMUser.phone_number)
@@ -172,15 +184,18 @@ async def user_phone_route(message: Message, state: FSMContext) -> None:
     :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
-    await state.update_data(phone_number=message.text)
-    await state.set_state(FSMUser.confirmation)
-    data = await state.get_data()
-    keyboard = Keyboard(2, '-user-reg').create_inline(lex_buttons.yes, lex_buttons.no)
-    await message.answer(Text(lex_messages.userConfirm.format(
-        surname=data['surname'],
-        name=data['name'],
-        phone=data['phone_number']
-    )).as_markdown(), reply_markup=keyboard)
+    if re.compile(r'^7\d{10}$').match(message.text):
+        await state.update_data(phone_number=message.text)
+        await state.set_state(FSMUser.confirmation)
+        data = await state.get_data()
+        keyboard = Keyboard(2, '-user-reg').create_inline(lex_buttons.yes, lex_buttons.no)
+        await message.answer(Text(lex_messages.userConfirm.format(
+            surname=data['surname'],
+            name=data['name'],
+            phone=data['phone_number']
+        )).as_markdown(), reply_markup=keyboard)
+    else:
+        await message.answer(Text(lex_messages.userPhoneNotValid).as_markdown())
 
 
 @records_router.callback_query(FSMUser.confirmation, F.data == f'{lex_buttons.no.callback}-user-reg')
@@ -223,8 +238,8 @@ async def create_user_route(callback: CallbackQuery, state: FSMContext) -> None:
             keyboard = Keyboard(2, '-record').create_inline(lex_buttons.yes, lex_buttons.no)
             await callback.message.answer(
                 Text(lex_messages.recordConfirm.format(
-                    day=data['date'],
-                    tm=data['time']
+                    day=data['date'].strftime("%d-%m-%Y"),
+                    tm=data['time'].strftime("%H:%M")
                 )).as_markdown(),
                 reply_markup=keyboard
             )
@@ -251,6 +266,16 @@ async def create_record_route(callback: CallbackQuery, state: FSMContext) -> Non
         await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
     else:
         await callback.message.answer(Text(lex_messages.recordOk.format(name=create.entity.user.name)).as_markdown())
+        day_confirm = True
+        record_datetime = datetime(
+                data['date'].year, data['date'].month, data['date'].day,
+                data['time'].hour, data['time'].minute, data['time'].second
+            )
+        if (record_datetime - datetime.now()) < timedelta(hours=2):
+            day_confirm = False
+            two_hours_confirm_datetime = datetime.now()
+        else:
+            two_hours_confirm_datetime = record_datetime - timedelta(hours=2)
         job_two_hours_confirm = await create_job(
             callback.from_user.id,
             SchedulerJob(
@@ -265,38 +290,37 @@ async def create_record_route(callback: CallbackQuery, state: FSMContext) -> Non
                     2, f'-confirmation_two_hours:{create.entity.id}'
                 ).create_inline(lex_buttons.yes, lex_buttons.no)
             ),
-            datetime(
-                data['date'].year, data['date'].month, data['date'].day,
-                data['time'].hour, data['time'].minute, data['time'].second
-            ) - timedelta(hours=2)
+            two_hours_confirm_datetime
         )
         if job_two_hours_confirm.error:
             logger.warning(job_two_hours_confirm.errorText)
             await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
             await state.clear()
-        job_day_confirm = await create_job(
-            callback.from_user.id,
-            SchedulerJob(
-                type=SchedulerJobType.SEND_MESSAGE,
-                chat_id=callback.from_user.id,
-                text=Text(lex_messages.confirmationDay.format(
-                    date=create.entity.date.strftime("%d-%m-%Y"),
-                    time=create.entity.time.strftime("%H:%M"),
-                    name=create.entity.user.name
-                )).as_markdown(),
-                keyboard=Keyboard(
-                    2, f'-confirmation_day:{create.entity.id}'
-                ).create_inline(lex_buttons.yes, lex_buttons.no)
-            ),
-            datetime(
-                data['date'].year, data['date'].month, data['date'].day,
-                data['time'].hour, data['time'].minute, data['time'].second
-            ) - timedelta(days=1)
-        )
-        if job_day_confirm.error:
-            logger.warning(job_day_confirm.errorText)
-            await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
-            await state.clear()
+        if day_confirm:
+            if record_datetime - datetime.now() < timedelta(days=1):
+                day_confirm_datetime = datetime.now()
+            else:
+                day_confirm_datetime = record_datetime - timedelta(days=1)
+            job_day_confirm = await create_job(
+                callback.from_user.id,
+                SchedulerJob(
+                    type=SchedulerJobType.SEND_MESSAGE,
+                    chat_id=callback.from_user.id,
+                    text=Text(lex_messages.confirmationDay.format(
+                        date=create.entity.date.strftime("%d-%m-%Y"),
+                        time=create.entity.time.strftime("%H:%M"),
+                        name=create.entity.user.name
+                    )).as_markdown(),
+                    keyboard=Keyboard(
+                        2, f'-confirmation_day:{create.entity.id}'
+                    ).create_inline(lex_buttons.yes, lex_buttons.no)
+                ),
+                day_confirm_datetime
+            )
+            if job_day_confirm.error:
+                logger.warning(job_day_confirm.errorText)
+                await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
+                await state.clear()
         for admin in apl_conf.tgBot.admins:
             job = await create_job(
                 admin,

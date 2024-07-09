@@ -6,6 +6,12 @@ from configuration import logger
 
 
 async def delete_jobs() -> ReturnEntity:
+    """
+    This function deletes old job records from the database.
+
+    :return: A ReturnEntity object indicating whether the jobs were deleted successfully and any error messages.
+    :rtype: ReturnEntity
+    """
     result: ReturnEntity = ReturnEntity(error=True)
     try:
         count = await objects_ro.count(SchedulerJobsRO.select().where(

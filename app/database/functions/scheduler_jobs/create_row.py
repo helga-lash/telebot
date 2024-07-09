@@ -7,6 +7,18 @@ from configuration import logger
 
 
 async def create_job(user: int, job: SchedulerJob, exec_time: datetime) -> ReturnEntity:
+    """
+    This function creates a new job record in the database.
+
+    :param user: The ID of the user who created the job.
+    :type user: int
+    :param job: The job to be created.
+    :type job: SchedulerJob
+    :param exec_time: The execution time of the job.
+    :type exec_time: datetime
+    :return: A ReturnEntity object indicating whether the job was created successfully and any error messages.
+    :rtype: ReturnEntity
+    """
     result: ReturnEntity = ReturnEntity(error=True)
     try:
         record = await objects_rw.create(
