@@ -27,7 +27,10 @@ async def schedule(bot: Bot) -> None:
                 continue
             match record.data.type:
                 case SchedulerJobType.REMOVE_MESSAGE:
-                    await bot.delete_message(chat_id=record.data.chat_id, message_id=record.data.message_id)
+                    try:
+                        await bot.delete_message(chat_id=record.data.chat_id, message_id=record.data.message_id)
+                    except Exception as error:
+                        logger.warning(f'Unable to delete message ID={record.data.message_id}: {error}')
                 case SchedulerJobType.SEND_MESSAGE:
                     await bot.send_message(chat_id=record.data.chat_id, text=record.data.text,
                                            reply_markup=record.data.keyboard)

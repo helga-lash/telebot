@@ -32,8 +32,8 @@ app:
   tgBot:
     token: 6870999386:AAGccloydrBobPuFvzjrMWYKkLpMRSzxy3I
     admins:
-#      - 422100870
-      - 972102598
+      - 422100870
+#      - 972102598
     recordTime:
       - '11:30:00'
       - '15:00'

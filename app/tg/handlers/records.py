@@ -15,6 +15,8 @@ from configuration import logger, apl_conf
 from database.functions import rec_day, user_by_id, create_user, create_registration
 from database.entities.scheduler_jobs.work_class import SchedulerJobType, SchedulerJob
 from database import create_job
+from scheduler import delete_msq_queue
+
 
 records_router: Router = Router()
 
@@ -152,12 +154,37 @@ async def username_route(message: Message, state: FSMContext) -> None:
     :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
+    logger.debug(f'The user ID={message.from_user.id} sent name')
+    job = await create_job(
+        message.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=message.chat.id,
+            message_id=message.message_id
+        ),
+        datetime.now() + timedelta(minutes=10)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await delete_msq_queue.put(message)
     if re.compile(r'^[А-Я][а-я]{1,9}$').match(message.text):
         await state.update_data(name=message.text)
         await state.set_state(FSMUser.surname)
-        await message.answer(Text(lex_messages.userSurname).as_markdown())
+        msg = await message.answer(Text(lex_messages.userSurname).as_markdown())
     else:
-        await message.answer(Text(lex_messages.userNameNotValid).as_markdown())
+        msg = await message.answer(Text(lex_messages.userNameNotValid).as_markdown())
+    job = await create_job(
+        message.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=message.chat.id,
+            message_id=msg.message_id
+        ),
+        datetime.now() + timedelta(minutes=10)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await delete_msq_queue.put(msg)
 
 
 @records_router.message(FSMUser.surname)
@@ -168,12 +195,37 @@ async def user_surname_route(message: Message, state: FSMContext) -> None:
     :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
+    logger.debug(f'The user ID={message.from_user.id} sent surname')
+    job = await create_job(
+        message.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=message.chat.id,
+            message_id=message.message_id
+        ),
+        datetime.now() + timedelta(minutes=10)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await delete_msq_queue.put(message)
     if re.compile(r'^[А-Я][а-я]{1,9}$').match(message.text):
         await state.update_data(surname=message.text)
         await state.set_state(FSMUser.phone_number)
-        await message.answer(Text(lex_messages.userPhone).as_markdown())
+        msg = await message.answer(Text(lex_messages.userPhone).as_markdown())
     else:
-        await message.answer(Text(lex_messages.userSurnameNotValid).as_markdown())
+        msg = await message.answer(Text(lex_messages.userSurnameNotValid).as_markdown())
+    job = await create_job(
+        message.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=message.chat.id,
+            message_id=msg.message_id
+        ),
+        datetime.now() + timedelta(minutes=10)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await delete_msq_queue.put(msg)
 
 
 @records_router.message(FSMUser.phone_number)
@@ -184,18 +236,43 @@ async def user_phone_route(message: Message, state: FSMContext) -> None:
     :param state: aiogram.fsm.context.FSMContext
     :return: None
     """
+    logger.debug(f'The user ID={message.from_user.id} sent phone number')
+    job = await create_job(
+        message.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=message.chat.id,
+            message_id=message.message_id
+        ),
+        datetime.now() + timedelta(minutes=10)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await delete_msq_queue.put(message)
     if re.compile(r'^7\d{10}$').match(message.text):
         await state.update_data(phone_number=message.text)
         await state.set_state(FSMUser.confirmation)
         data = await state.get_data()
         keyboard = Keyboard(2, '-user-reg').create_inline(lex_buttons.yes, lex_buttons.no)
-        await message.answer(Text(lex_messages.userConfirm.format(
+        msg = await message.answer(Text(lex_messages.userConfirm.format(
             surname=data['surname'],
             name=data['name'],
             phone=data['phone_number']
         )).as_markdown(), reply_markup=keyboard)
     else:
-        await message.answer(Text(lex_messages.userPhoneNotValid).as_markdown())
+        msg = await message.answer(Text(lex_messages.userPhoneNotValid).as_markdown())
+    job = await create_job(
+        message.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=message.chat.id,
+            message_id=msg.message_id
+        ),
+        datetime.now() + timedelta(minutes=10)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await delete_msq_queue.put(msg)
 
 
 @records_router.callback_query(FSMUser.confirmation, F.data == f'{lex_buttons.no.callback}-user-reg')
@@ -208,8 +285,33 @@ async def not_registration_route(callback: CallbackQuery, state: FSMContext) -> 
     """
     await callback.answer()
     await callback.message.delete_reply_markup()
+    logger.debug(f'The user ID={callback.from_user.id} did not confirm his details')
+    job = await create_job(
+        callback.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.message_id
+        ),
+        datetime.now() + timedelta(minutes=10)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await delete_msq_queue.put(callback.message)
     await state.set_state(FSMUser.name)
-    await callback.message.answer(Text(lex_messages.name).as_markdown())
+    msg = await callback.message.answer(Text(lex_messages.name).as_markdown())
+    job = await create_job(
+        callback.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=callback.message.chat.id,
+            message_id=msg.message_id
+        ),
+        datetime.now() + timedelta(minutes=10)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await delete_msq_queue.put(msg)
 
 
 @records_router.callback_query(FSMUser.confirmation, F.data == f'{lex_buttons.yes.callback}-user-reg')
@@ -223,12 +325,25 @@ async def create_user_route(callback: CallbackQuery, state: FSMContext) -> None:
     """
     await callback.answer()
     await callback.message.delete_reply_markup()
+    logger.debug(f'The user ID={callback.from_user.id} confirm his details')
+    job = await create_job(
+        callback.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.message_id
+        ),
+        datetime.now() + timedelta(minutes=10)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await delete_msq_queue.put(callback.message)
     data = await state.get_data()
     create = await create_user(callback.from_user.id, data['name'], data['surname'],
                                data['phone_number'], data['admin'])
     if create.error:
         logger.warning(create.errorText)
-        await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
+        msg = await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
         await state.clear()
     else:
         if ((str(callback.from_user.id) not in apl_conf.tgBot.admins) and
@@ -236,7 +351,7 @@ async def create_user_route(callback: CallbackQuery, state: FSMContext) -> None:
             await state.update_data(user=create.entity.tg_id)
             await state.set_state(FSMRecord.confirmation)
             keyboard = Keyboard(2, '-record').create_inline(lex_buttons.yes, lex_buttons.no)
-            await callback.message.answer(
+            msg = await callback.message.answer(
                 Text(lex_messages.recordConfirm.format(
                     day=data['date'].strftime("%d-%m-%Y"),
                     tm=data['time'].strftime("%H:%M")
@@ -245,7 +360,19 @@ async def create_user_route(callback: CallbackQuery, state: FSMContext) -> None:
             )
         else:
             await state.clear()
-            await callback.message.answer(Text(lex_messages.userOk).as_markdown())
+            msg = await callback.message.answer(Text(lex_messages.userOk).as_markdown())
+    job = await create_job(
+        callback.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=callback.message.chat.id,
+            message_id=msg.message_id
+        ),
+        datetime.now() + timedelta(minutes=10)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await delete_msq_queue.put(msg)
 
 
 @records_router.callback_query(FSMRecord.confirmation, F.data == f'{lex_buttons.yes.callback}-record')

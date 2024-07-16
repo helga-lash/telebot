@@ -6,10 +6,11 @@ from aiogram.utils.formatting import Text
 from aiogram.fsm.context import FSMContext
 from uuid import UUID
 from enum import Enum
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from database.entities import RegistrationRecord
-from database import record_by_id, record_update_notes
+from database import record_by_id, record_update_notes, create_job
+from database.entities.scheduler_jobs.work_class import SchedulerJobType, SchedulerJob
 from tg.lexicon import lex_messages, lex_buttons
 from tg.states import FSMRecordNotes
 from configuration import logger, apl_conf
@@ -50,6 +51,7 @@ class RecordsKeyboard:
     Methods:
         start: create an inline keyboard for the record buttons
     """
+
     @staticmethod
     async def start(records: list[RegistrationRecord], day: date) -> InlineKeyboardMarkup:
         """
@@ -74,7 +76,7 @@ class RecordsKeyboard:
                     callback_data=lex_buttons.timeReserve.callback))
         buttons.append(InlineKeyboardButton(
             text=lex_buttons.back.text,
-            callback_data=lex_buttons.back.callback + '-calendar'))
+            callback_data=lex_buttons.back.callback + '-admin-calendar'))
         width = 3
         if len(buttons) > width:
             width = 2
@@ -129,10 +131,10 @@ class RecordsKeyboard:
                         action=RecordActions.add).pack(
                     )), InlineKeyboardButton(
                     text=lex_buttons.back.text,
-                    callback_data=lex_buttons.back.callback + '-calendar')
+                    callback_data=lex_buttons.back.callback + '-admin-calendar')
                 ]
-                await query.message.answer(Text(msg_text).as_markdown(),
-                                           reply_markup=kb_builder.row(*buttons).adjust(1).as_markup())
+                msg = await query.message.answer(Text(msg_text).as_markdown(),
+                                                 reply_markup=kb_builder.row(*buttons).adjust(1).as_markup())
             case RecordActions.delete:
                 record = await record_update_notes(data.id)
                 if record.error:
@@ -153,7 +155,7 @@ class RecordsKeyboard:
                     msg_text += f'Подтверждение за два часа: Да\n'
                 else:
                     msg_text += f'Подтверждение за два часа: Нет\n'
-                await query.message.answer(Text(msg_text).as_markdown())
+                msg = await query.message.answer(Text(msg_text).as_markdown())
             case RecordActions.add:
                 record = await record_by_id(data.id)
                 if record.error:
@@ -161,11 +163,23 @@ class RecordsKeyboard:
                     await query.message.answer(Text(lex_messages.techProblems).as_markdown())
                 await state.update_data(id=data.id, notes=record.entity.notes)
                 await state.set_state(FSMRecordNotes.add)
-                await query.message.answer(Text(lex_messages.addNotes).as_markdown())
+                msg = await query.message.answer(Text(lex_messages.addNotes).as_markdown())
             case RecordActions.replace:
                 await state.update_data(id=data.id)
                 await state.set_state(FSMRecordNotes.replace)
-                await query.message.answer(Text(lex_messages.replaceNotes).as_markdown())
+                msg = await query.message.answer(Text(lex_messages.replaceNotes).as_markdown())
+        job = await create_job(
+            query.from_user.id,
+            SchedulerJob(
+                type=SchedulerJobType.REMOVE_MESSAGE,
+                chat_id=query.chat.id,
+                message_id=msg.message_id
+            ),
+            datetime.now() + timedelta(minutes=10)
+        )
+        if job.error:
+            logger.warning(job.errorText)
+            await query.message.answer(Text(lex_messages.techProblems).as_markdown())
 
 
 __all__ = ('RecordsKeyboard', 'RecordCallback')
