@@ -2,7 +2,7 @@ from tg.handlers.command import command_router
 from tg.handlers.not_match import not_match_router
 from tg.handlers.info import info_router
 from tg.handlers.records import records_router
-from tg.handlers.admin import admin_router
+from tg.handlers.admin import admin_routers_list
 from tg.handlers.confirmation import confirmation_router
 
 
@@ -11,6 +11,6 @@ __all__ = (
     'not_match_router',
     'info_router',
     'records_router',
-    'admin_router',
+    'admin_routers_list',
     'confirmation_router'
 )
