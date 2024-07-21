@@ -14,10 +14,10 @@ from s3_minio import s3_client
 from database.entities.scheduler_jobs.work_class import SchedulerJobType, SchedulerJob
 from database import create_job
 
-info_router: Router = Router()
+user_info_router: Router = Router()
 
 
-@info_router.callback_query(F.data == lex_buttons.info.callback)
+@user_info_router.callback_query(F.data == lex_buttons.info.callback)
 async def info_route(callback: CallbackQuery, state: FSMContext) -> None:
     """
     A function that processes the returned data from the info button
@@ -46,7 +46,7 @@ async def info_route(callback: CallbackQuery, state: FSMContext) -> None:
         await state.clear()
 
 
-@info_router.callback_query(F.data == lex_buttons.works.callback)
+@user_info_router.callback_query(F.data == lex_buttons.works.callback)
 async def works_route(callback: CallbackQuery, state: FSMContext) -> None:
     """
     A function that processes the returned data from the works button
@@ -75,11 +75,11 @@ async def works_route(callback: CallbackQuery, state: FSMContext) -> None:
         await state.clear()
 
 
-@info_router.callback_query(F.data == lex_buttons.trends.callback)
-@info_router.callback_query(F.data == lex_buttons.naturals.callback)
-@info_router.callback_query(F.data == lex_buttons.bulks.callback)
-@info_router.callback_query(F.data == lex_buttons.reviews.callback)
-@info_router.callback_query(F.data == lex_buttons.next.callback)
+@user_info_router.callback_query(F.data == lex_buttons.trends.callback)
+@user_info_router.callback_query(F.data == lex_buttons.naturals.callback)
+@user_info_router.callback_query(F.data == lex_buttons.bulks.callback)
+@user_info_router.callback_query(F.data == lex_buttons.reviews.callback)
+@user_info_router.callback_query(F.data == lex_buttons.next.callback)
 async def photos_route(callback: CallbackQuery, state: FSMContext) -> None:
     """
     A function that processes the returned data from the treads button
@@ -129,7 +129,7 @@ async def photos_route(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.answer(Text(lex_messages.photoShow).as_markdown(), reply_markup=keyboard)
 
 
-@info_router.callback_query(F.data == lex_buttons.contacts.callback)
+@user_info_router.callback_query(F.data == lex_buttons.contacts.callback)
 async def contacts_route(callback: CallbackQuery) -> None:
     """
     A function that processes the returned data from the contacts button
@@ -162,4 +162,4 @@ async def contacts_route(callback: CallbackQuery) -> None:
         await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
 
 
-__all__ = 'info_router'
+__all__ = 'user_info_router'

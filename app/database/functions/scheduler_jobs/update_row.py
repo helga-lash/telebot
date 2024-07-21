@@ -27,7 +27,8 @@ async def update_job(record_id: UUID, lock: bool) -> ReturnEntity:
                 name=record.user_id.name,
                 surname=record.user_id.surname,
                 phone_number=record.user_id.phone_number,
-                notes=record.user_id.notes
+                notes=record.user_id.notes,
+                admin=record.user_id.admin
             ),
             createdAt=record.created_at,
             updatedAt=record.updated_at,

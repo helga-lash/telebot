@@ -12,10 +12,10 @@ from database.entities.scheduler_jobs.work_class import SchedulerJobType, Schedu
 from database import create_job
 
 
-confirmation_router: Router = Router()
+user_confirmation_router: Router = Router()
 
 
-@confirmation_router.callback_query(F.data.startswith(f'{lex_buttons.yes.callback}-confirmation_day'))
+@user_confirmation_router.callback_query(F.data.startswith(f'{lex_buttons.yes.callback}-confirmation_day'))
 async def yes_confirmation_day_route(callback: CallbackQuery) -> None:
     """
     A function that processes the returned data from the yes button in confirmation day
@@ -49,7 +49,7 @@ async def yes_confirmation_day_route(callback: CallbackQuery) -> None:
                 await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
 
 
-@confirmation_router.callback_query(F.data.startswith(f'{lex_buttons.yes.callback}-confirmation_two_hours'))
+@user_confirmation_router.callback_query(F.data.startswith(f'{lex_buttons.yes.callback}-confirmation_two_hours'))
 async def yes_confirmation_two_hours_route(callback: CallbackQuery) -> None:
     """
     A function that processes the returned data from the yes button in confirmation day
@@ -83,7 +83,7 @@ async def yes_confirmation_two_hours_route(callback: CallbackQuery) -> None:
                 await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
 
 
-@confirmation_router.callback_query(F.data.startswith(f'{lex_buttons.no.callback}-confirmation'))
+@user_confirmation_router.callback_query(F.data.startswith(f'{lex_buttons.no.callback}-confirmation'))
 async def no_confirmation_route(callback: CallbackQuery) -> None:
     """
     A function that processes the returned data from the yes button in confirmation day
@@ -117,4 +117,4 @@ async def no_confirmation_route(callback: CallbackQuery) -> None:
                 await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
 
 
-__all__ = 'confirmation_router'
+__all__ = 'user_confirmation_router'
