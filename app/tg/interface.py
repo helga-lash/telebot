@@ -4,8 +4,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from configuration import logger, apl_conf
-from tg.handlers import (command_router, info_router, records_router, not_match_router, admin_routers_list,
-                         confirmation_router)
+from tg.handlers import command_router, not_match_router, admin_routers_list, user_routers_list
 from tg.keyboards import set_menu
 
 
@@ -42,11 +41,10 @@ class TelegramInterface:
         self.__create_photo_path()
         await set_menu(self.bot)
         self.dispatcher.include_router(command_router)
-        self.dispatcher.include_router(records_router)
-        self.dispatcher.include_router(info_router)
         for admin_router in admin_routers_list:
             self.dispatcher.include_router(admin_router)
-        self.dispatcher.include_router(confirmation_router)
+        for user_router in user_routers_list:
+            self.dispatcher.include_router(user_router)
         self.dispatcher.include_router(not_match_router)
         await self.bot.delete_webhook(drop_pending_updates=True)
         await self.dispatcher.start_polling(self.bot, handle_signals=False)

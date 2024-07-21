@@ -40,14 +40,14 @@ async def delete_message_worker(queue: asyncio.Queue, bot: Bot):
     while apl_conf.run:
         message = await queue.get()
         logger.debug(f'Adding message to delete queue: {message.message_id}')
-        tasks.append(asyncio.create_task(delete_message(message, bot, 300)))
+        tasks.append(asyncio.create_task(delete_message(message, bot, 86400)))
         queue.task_done()
         for task in tasks:
             if task.done():
                 logger.debug(f'Task done: {task.get_name()}')
                 tasks.remove(task)
     while not queue.empty():
-        message = await queue.get()
+        message: Message = await queue.get()
         logger.debug(f'Deleting message: {message.message_id}')
         try:
             await bot.delete_message(message.chat.id, message.message_id)
