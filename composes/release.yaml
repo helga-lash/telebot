@@ -9,7 +9,7 @@ services:
       - minio_data_release:/data
 
   telebot:
-    image: registry.xoma-net/lash_telebot:v0.1.1
+    image: registry.xoma-net/lash_telebot:v0.2.0
     container_name: telebot
     restart: always
     deploy:
@@ -40,7 +40,7 @@ services:
       MN_ACCESS_KEY: testUser
       MN_SECRET_KEY: testPassword
       TG_TOKEN: 6870999386:AAGccloydrBobPuFvzjrMWYKkLpMRSzxy3I
-      TG_ADMINS: 972102598
+      TG_ADMINS: "972102598"
       TG_RD_TM: "11:30:00, 15:00, 18:00:00"
       TG_RD_MT: 2
       TG_PHOTO_PATH: /tmp/photo
