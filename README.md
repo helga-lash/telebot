@@ -38,5 +38,5 @@ Telegram bot
   
 ## Сборка контейнера:
 ```shell
-docker build . --target prod --tag registry.xoma-net/lash_telebot:v0.2.0
+docker build . --target prod --tag registry.xoma-net/lash_telebot:v0.2.1
 ```

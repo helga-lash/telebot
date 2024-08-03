@@ -79,8 +79,7 @@ class SimpleCalendar:
             case 12:
                 return 'Дек'
 
-    async def start_calendar(self, year: int = datetime.now().year,
-                             month: int = datetime.now().month) -> ReturnEntity:
+    async def start_calendar(self, year: int = None, month: int = None) -> ReturnEntity:
         """
         Creates an inline keyboard with the provided year and month.
 
@@ -91,6 +90,10 @@ class SimpleCalendar:
         Returns:
             ReturnEntity: An object containing the error status and the InlineKeyboardMarkup object with the calendar.
         """
+        if year is None:
+            year = datetime.now().year
+        if month is None:
+            month = datetime.now().month
         result: ReturnEntity = ReturnEntity(error=False, entity=InlineKeyboardBuilder())
         buttons: list[InlineKeyboardButton] = []
         ignore_callback = SimpleCalendarCallback(act="IGNORE", year=year, month=month, day=0)
@@ -250,8 +253,7 @@ class AdminCalendar:
             case 12:
                 return 'Дек'
 
-    async def start_calendar(self, year: int = datetime.now().year,
-                             month: int = datetime.now().month) -> ReturnEntity:
+    async def start_calendar(self, year: int = None, month: int = None) -> ReturnEntity:
         """
         Creates an inline keyboard with the provided year and month.
 
@@ -262,6 +264,10 @@ class AdminCalendar:
         Returns:
             ReturnEntity: An object containing the error status and the InlineKeyboardMarkup object with the calendar.
         """
+        if year is None:
+            year = datetime.now().year
+        if month is None:
+            month = datetime.now().month
         result: ReturnEntity = ReturnEntity(error=False, entity=InlineKeyboardBuilder())
         buttons: list[InlineKeyboardButton] = []
         ignore_callback = AdminCalendarCallback(act="IGNORE", year=year, month=month, day=0)

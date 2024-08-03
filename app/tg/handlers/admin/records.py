@@ -67,7 +67,7 @@ async def admin_time_reserve_route(callback: CallbackQuery, state: FSMContext) -
 
 
 @admin_records_router.callback_query(FSMRecordReservation.time)
-async def admin_record_reserve_route(callback: CallbackQuery, state: FSMContext) -> None:
+async def admin_notes_reserve_route(callback: CallbackQuery, state: FSMContext) -> None:
     """
     A function that processes state FSMRecordReservation.time
     :param callback: aiogram.types.CallbackQuery
@@ -91,16 +91,9 @@ async def admin_record_reserve_route(callback: CallbackQuery, state: FSMContext)
         await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
         return
     await state.update_data(time=time(*[int(x) for x in callback.data.split(':')]))
-    await state.set_state(FSMRecordReservation.confirmation)
-    data = await state.get_data()
-    keyboard = Keyboard(2, '-admin-record').create_inline(lex_buttons.yes, lex_buttons.no)
+    await state.set_state(FSMRecordReservation.notes)
     msg = await callback.message.answer(
-        Text(lex_messages.recordReserved.format(
-            day=data['date'],
-            tm=data['time']
-        )).as_markdown(),
-        reply_markup=keyboard
-    )
+        Text(lex_messages.reserveNotes).as_markdown())
     job = await create_job(
         callback.from_user.id,
         SchedulerJob(
@@ -113,6 +106,54 @@ async def admin_record_reserve_route(callback: CallbackQuery, state: FSMContext)
     if job.error:
         logger.warning(job.errorText)
         await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
+
+
+@admin_records_router.message(FSMRecordReservation.notes)
+async def admin_record_reserve_route(message: Message, state: FSMContext) -> None:
+    """
+    A function that processes state FSMRecordReservation.time
+    :param message: aiogram.types.Message
+    :param state: aiogram.fsm.context.FSMContext
+    :return: None
+    """
+    logger.debug(f'The user {message.from_user.id} has selected a time to reserve')
+    job = await create_job(
+        message.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=message.chat.id,
+            message_id=message.message_id
+        ),
+        datetime.now() + timedelta(minutes=10)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await message.answer(Text(lex_messages.techProblems).as_markdown())
+        return
+    await state.update_data(notes=message.text)
+    await state.set_state(FSMRecordReservation.confirmation)
+    data = await state.get_data()
+    keyboard = Keyboard(2, '-admin-record').create_inline(lex_buttons.yes, lex_buttons.no)
+    msg = await message.answer(
+        Text(lex_messages.recordReserved.format(
+            day=data['date'],
+            tm=data['time'],
+            notes=data['notes']
+        )).as_markdown(),
+        reply_markup=keyboard
+    )
+    job = await create_job(
+        message.from_user.id,
+        SchedulerJob(
+            type=SchedulerJobType.REMOVE_MESSAGE,
+            chat_id=message.chat.id,
+            message_id=msg.message_id
+        ),
+        datetime.now() + timedelta(minutes=10)
+    )
+    if job.error:
+        logger.warning(job.errorText)
+        await message.answer(Text(lex_messages.techProblems).as_markdown())
 
 
 @admin_records_router.callback_query(F.data == f'{lex_buttons.no.callback}-admin-record',
@@ -186,7 +227,7 @@ async def reservation_route(callback: CallbackQuery, state: FSMContext) -> None:
         logger.warning(job.errorText)
         await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
     data = await state.get_data()
-    create = await create_registration(data['date'], data['time'], callback.from_user.id)
+    create = await create_registration(data['date'], data['time'], callback.from_user.id, data['notes'])
     if create.error:
         logger.warning(create.errorText)
         await callback.message.answer(Text(lex_messages.techProblems).as_markdown())
@@ -279,7 +320,7 @@ async def admin_record_replace_notes_route(message: Message, state: FSMContext) 
             msg_text += f'Подтверждение за два часа: Да\n'
         else:
             msg_text += f'Подтверждение за два часа: Нет\n'
-        keyboard = await Keyboard(1, '-admin-calendar').create_inline(lex_buttons.back)
+        keyboard = Keyboard(1, '-admin-calendar').create_inline(lex_buttons.back)
         msg = await message.answer(Text(msg_text).as_markdown(), reply_markup=keyboard)
         job = await create_job(
             message.from_user.id,
@@ -339,7 +380,7 @@ async def admin_record_add_notes_route(message: Message, state: FSMContext) -> N
             msg_text += f'Подтверждение за два часа: Да\n'
         else:
             msg_text += f'Подтверждение за два часа: Нет\n'
-        keyboard = await Keyboard(1, '-admin-calendar').create_inline(lex_buttons.back)
+        keyboard = Keyboard(1, '-admin-calendar').create_inline(lex_buttons.back)
         msg = await message.answer(Text(msg_text).as_markdown(), reply_markup=keyboard)
         job = await create_job(
             message.from_user.id,

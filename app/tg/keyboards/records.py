@@ -172,7 +172,7 @@ class RecordsKeyboard:
             query.from_user.id,
             SchedulerJob(
                 type=SchedulerJobType.REMOVE_MESSAGE,
-                chat_id=query.chat.id,
+                chat_id=query.message.chat.id,
                 message_id=msg.message_id
             ),
             datetime.now() + timedelta(minutes=10)

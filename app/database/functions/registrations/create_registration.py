@@ -6,12 +6,13 @@ from helpers.work_classes import ReturnEntity
 from configuration import logger
 
 
-async def create_registration(dt: date, tm: time, user_id: int) -> ReturnEntity:
+async def create_registration(dt: date, tm: time, user_id: int, notes: str = None) -> ReturnEntity:
     """
     A function that adds an entry to the registration table
     :param dt: date
     :param tm: time
     :param user_id: telegram user ID
+    :param notes: notes for the user record
     :return: ReturnEntity where entity is database.entities.RegistrationRecord
     """
     result: ReturnEntity = ReturnEntity(error=True)
@@ -20,7 +21,8 @@ async def create_registration(dt: date, tm: time, user_id: int) -> ReturnEntity:
             RegistrationsRW,
             date=dt,
             time=tm,
-            user_id=str(user_id)
+            user_id=str(user_id),
+            notes=notes
         )
         result.entity = RegistrationRecord(
             id=record.id,

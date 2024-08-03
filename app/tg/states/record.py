@@ -43,6 +43,7 @@ class FSMRecordReservation(StatesGroup):
         time: aiogram.filters.state.State
     """
     time: State = State()
+    notes: State = State()
     confirmation: State = State()
 
 
