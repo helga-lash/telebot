@@ -10,10 +10,7 @@ Telegram bot
     ```
   * Подтянуть изменения из репозитория:
       ```bash
-      cd helpers_entity/
-      git fetch
-      git merge origin/main
-      cd ../
+      git submodule update --remote
       ```
 
 ## Dev окружение:
